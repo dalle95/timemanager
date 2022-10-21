@@ -1,3 +1,5 @@
+import 'package:carl_touch_api/providers/actiontypes.dart';
+import 'package:carl_touch_api/screens/actiontype_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -32,6 +34,13 @@ class _MyAppState extends State<MyApp> {
             auth.userId,
             previousWorkOrders == null ? [] : previousWorkOrders.wo,
           ),
+        ),
+        ChangeNotifierProxyProvider<Auth, ActionTypes>(
+          update: (ctx, auth, previousActionTypes) => ActionTypes(
+            auth.urlAmbiente,
+            auth.token,
+            previousActionTypes == null ? [] : previousActionTypes.actionTypes,
+          ),
         )
       ],
       child: Consumer<Auth>(
@@ -56,6 +65,7 @@ class _MyAppState extends State<MyApp> {
                 ),
           routes: {
             WoDetailScreen.routeName: (ctx) => WoDetailScreen(),
+            ActionTypeListScreen.routeName: (ctx) => ActionTypeListScreen(),
           },
         ),
       ),

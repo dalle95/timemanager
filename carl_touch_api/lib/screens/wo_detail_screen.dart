@@ -1,5 +1,7 @@
+import 'package:carl_touch_api/providers/actiontypes.dart';
 import 'package:carl_touch_api/providers/work_order.dart';
 import 'package:carl_touch_api/providers/work_orders.dart';
+import 'package:carl_touch_api/screens/actiontype_list_screen.dart';
 import 'package:carl_touch_api/widgets/flat_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,11 +18,14 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
   var _isInit = true;
   var _isLoading = false;
 
+  var _actionType = TextEditingController(text: '');
+
   var _editedWO = WorkOrder(
     id: null,
     codice: '',
     descrizione: '',
     statusCode: '',
+    actionType: '',
   );
 
   var _initWOValues = {
@@ -37,17 +42,35 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
       if (woId != null) {
         _editedWO =
             Provider.of<WorkOrders>(context, listen: false).findById(woId);
+        // var actionType_code = Provider.of<ActionTypes>(context, listen: false)
+        //     .findById(_editedWO.actionType)
+        //     .code;
 
         _initWOValues = {
           'code': _editedWO.codice,
           'description': _editedWO.descrizione,
           'statusCode': _editedWO.statusCode,
-          'actionType': _editedWO.actionType,
+          //'actionType': _editedWO.actionType,
         };
+        _actionType.text = _editedWO.actionType;
       }
     }
     _isInit = false;
     super.didChangeDependencies();
+  }
+
+  Future<void> _searchList() async {
+    final result =
+        await Navigator.of(context).pushNamed(ActionTypeListScreen.routeName);
+    print(result);
+    _actionType.text = result;
+  }
+
+  @override
+  void dispose() {
+    // Clean up the controller when the widget is disposed.
+    _actionType.dispose();
+    super.dispose();
   }
 
   Future<void> _saveForm() async {
@@ -191,9 +214,11 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
                 },
               ),
               TextFormField(
-                initialValue: _initWOValues['actionType'],
+                onTap: _searchList,
+                //initialValue: _initWOValues['actionType'],
                 decoration: InputDecoration(labelText: 'Natura'),
                 textInputAction: TextInputAction.done,
+                controller: _actionType,
                 onSaved: (value) {
                   _editedWO = WorkOrder(
                     id: _editedWO.id,

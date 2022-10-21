@@ -24,6 +24,7 @@ class WorkOrders with ChangeNotifier {
     return _workOrders.firstWhere((workOrder) => workOrder.id == id);
   }
 
+  // Recupera il numero di WO
   int get itemCount {
     return _workOrders.length;
   }
@@ -67,8 +68,7 @@ class WorkOrders with ChangeNotifier {
             var actionTypeData =
                 json.decode(actionType_response.body) as dynamic;
             // print(json.decode(actionType_response.body));
-            var actionType_code =
-                actionTypeData['data']['attributes']['description'];
+            var actionType_code = actionTypeData['data']['attributes']['code'];
 
             // print('${wo['attributes']['code']}: $actionType_code');
             loadedWorkOrders.add(

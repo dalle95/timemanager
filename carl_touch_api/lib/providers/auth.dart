@@ -63,8 +63,8 @@ class Auth with ChangeNotifier {
         );
         responseData = json.decode(response.body);
 
-        var url_actor = responseData['data'][0]['relationships']['actor']
-            ['links']['related'];
+        var url_actor = Uri.parse(responseData['data'][0]['relationships']
+            ['actor']['links']['related']);
         response = await http.get(
           url_actor,
           headers: {
