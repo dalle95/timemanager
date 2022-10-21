@@ -10,6 +10,8 @@ class Auth with ChangeNotifier {
   String _urlAmbiente;
   String _token;
   String _userId;
+  String _actorName;
+
   DateTime _expiryDate;
   Timer _authTimer;
 
@@ -23,6 +25,10 @@ class Auth with ChangeNotifier {
 
   String get userId {
     return _userId;
+  }
+
+  String get actorName {
+    return _actorName;
   }
 
   String get token {
@@ -73,6 +79,8 @@ class Auth with ChangeNotifier {
         );
         responseData = json.decode(response.body);
         _userId = responseData['data']['id'];
+        _actorName = responseData['data']['attributes']['fullName'];
+        print(_actorName);
       } catch (error) {
         print(error);
         throw error;

@@ -23,6 +23,8 @@ class MainDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final actorName = Provider.of<Auth>(context, listen: false).actorName;
+
     return Drawer(
       child: Column(
         children: [
@@ -33,7 +35,7 @@ class MainDrawer extends StatelessWidget {
             width: double.infinity,
             height: 70,
             child: Text(
-              'Carl Touch',
+              'Better Touch',
               style: TextStyle(
                 color: Theme.of(context).accentColor,
                 fontSize: 20,
@@ -43,7 +45,7 @@ class MainDrawer extends StatelessWidget {
           ),
           buildListTile(
             Icons.account_circle_outlined,
-            'Utente',
+            'Utente: $actorName',
             () {
               Navigator.of(context).pushReplacementNamed('/');
             },

@@ -25,23 +25,33 @@ class _WOItemState extends State<WOItem> {
         );
       },
       child: Card(
+        elevation: 2,
         margin: const EdgeInsets.symmetric(
           horizontal: 10,
           vertical: 5,
         ),
-        child: ListTile(
-          title: Text(
-            widget.workOrder.descrizione ?? '',
-            style: const TextStyle(
-              fontSize: 16,
+        child: Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: ListTile(
+            leading: Icon(
+              Icons.work,
+              color: Theme.of(context).accentColor,
+              size: 40,
             ),
-          ),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(widget.workOrder.codice),
-              Text(widget.workOrder.statusCode),
-            ],
+            title: Text(
+              widget.workOrder.descrizione ?? '',
+              style: const TextStyle(
+                fontSize: 16,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.workOrder.codice),
+                Text('Stato: ${widget.workOrder.statusCode}'),
+                Text('Natura: ${widget.workOrder.actionType['code']}'),
+              ],
+            ),
           ),
         ),
       ),

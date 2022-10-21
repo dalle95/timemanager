@@ -25,7 +25,10 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
     codice: '',
     descrizione: '',
     statusCode: '',
-    actionType: '',
+    actionType: {
+      'id': '',
+      'code': '',
+    },
   );
 
   var _initWOValues = {
@@ -52,7 +55,7 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
           'statusCode': _editedWO.statusCode,
           //'actionType': _editedWO.actionType,
         };
-        _actionType.text = _editedWO.actionType;
+        _actionType.text = _editedWO.actionType['code'];
       }
     }
     _isInit = false;
@@ -62,8 +65,22 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
   Future<void> _searchList() async {
     final result =
         await Navigator.of(context).pushNamed(ActionTypeListScreen.routeName);
-    print(result);
+    //print(result);
+
     _actionType.text = result;
+
+    _editedWO = WorkOrder(
+      id: _editedWO.id,
+      codice: _editedWO.codice,
+      descrizione: _editedWO.descrizione,
+      statusCode: _editedWO.statusCode,
+      actionType: {
+        'id': Provider.of<ActionTypes>(context, listen: false)
+            .findByCode(_actionType.text)
+            .id,
+        'code': _actionType.text,
+      },
+    );
   }
 
   @override
@@ -189,7 +206,11 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
               ),
               TextFormField(
                 initialValue: _initWOValues['statusCode'],
-                decoration: InputDecoration(labelText: 'Stato'),
+                decoration: const InputDecoration(
+                  labelText: 'Stato',
+                ),
+                textAlign: TextAlign.center,
+                readOnly: true,
                 textInputAction: TextInputAction.next,
                 onSaved: (value) {
                   _editedWO = WorkOrder(
@@ -214,20 +235,27 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
                 },
               ),
               TextFormField(
-                onTap: _searchList,
-                //initialValue: _initWOValues['actionType'],
-                decoration: InputDecoration(labelText: 'Natura'),
-                textInputAction: TextInputAction.done,
+                //onTap: _searchList,
+                decoration: InputDecoration(
+                  labelText: 'Natura',
+                  suffixIcon: IconButton(
+                    icon: Icon(Icons.search),
+                    onPressed: _searchList,
+                  ),
+                ),
+                textAlign: TextAlign.center,
+                readOnly: true,
+                //textInputAction: TextInputAction.done,
                 controller: _actionType,
-                onSaved: (value) {
-                  _editedWO = WorkOrder(
-                    id: _editedWO.id,
-                    codice: _editedWO.codice,
-                    descrizione: _editedWO.descrizione,
-                    statusCode: _editedWO.statusCode,
-                    actionType: value,
-                  );
-                },
+                // onSaved: (value) {
+                //   _editedWO = WorkOrder(
+                //     id: _editedWO.id,
+                //     codice: _editedWO.codice,
+                //     descrizione: _editedWO.descrizione,
+                //     statusCode: _editedWO.statusCode,
+                //     actionType: value,
+                //   );
+                // },
                 onEditingComplete: () {
                   setState(() {});
                 },

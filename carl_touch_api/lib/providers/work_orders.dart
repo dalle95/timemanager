@@ -68,6 +68,7 @@ class WorkOrders with ChangeNotifier {
             var actionTypeData =
                 json.decode(actionType_response.body) as dynamic;
             // print(json.decode(actionType_response.body));
+            var actionType_id = actionTypeData['data']['id'];
             var actionType_code = actionTypeData['data']['attributes']['code'];
 
             // print('${wo['attributes']['code']}: $actionType_code');
@@ -77,7 +78,10 @@ class WorkOrders with ChangeNotifier {
                 codice: wo['attributes']['code'],
                 descrizione: wo['attributes']['description'],
                 statusCode: wo['attributes']['statusCode'],
-                actionType: actionType_code,
+                actionType: {
+                  'id': actionType_id,
+                  'code': actionType_code,
+                },
               ),
             );
             // print(wo['attributes']['code']);
@@ -96,7 +100,7 @@ class WorkOrders with ChangeNotifier {
 
   Future<void> addWorkOrder(WorkOrder workOrder, {int index = 0}) async {
     final url = Uri.parse('$urlAmbiente/api/entities/v1/wo');
-    print(url);
+    //print(url);
     try {
       final response = await http.post(
         url,
@@ -113,15 +117,15 @@ class WorkOrders with ChangeNotifier {
                 "actionType": {
                   "data": {
                     "type": "actiontype",
-                    "id": 1,
+                    "id": workOrder.actionType['id'],
                   }
                 },
-                "costCenter": {
-                  "data": {
-                    "type": "costcenter",
-                    "id": "177fed5ef2f-2ab4",
-                  }
-                }
+                // "costCenter": {
+                //   "data": {
+                //     "type": "costcenter",
+                //     "id": "177fed5ef2f-2ab4",
+                //   }
+                // }
               }
             }
           },
@@ -142,6 +146,10 @@ class WorkOrders with ChangeNotifier {
         codice: workOrder.codice,
         descrizione: workOrder.descrizione,
         statusCode: workOrder.statusCode,
+        actionType: {
+          'id': workOrder.actionType['id'],
+          'code': workOrder.actionType['code'],
+        },
         id: json.decode(response.body)['data']['id'],
       );
 
@@ -170,12 +178,12 @@ class WorkOrders with ChangeNotifier {
                   'statusCode': newWorkOrder.statusCode
                 },
                 'relationships': {
-                  // "actionType": {
-                  //   "data": {
-                  //     "type": "actiontype",
-                  //     "id": 1,
-                  //   }
-                  // },
+                  "actionType": {
+                    "data": {
+                      "type": "actiontype",
+                      "id": newWorkOrder.actionType['id'],
+                    }
+                  },
                   // "costCenter": {
                   //   "data": {
                   //     "type": "costcenter",
