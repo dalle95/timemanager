@@ -1,4 +1,5 @@
 import 'package:carl_touch_api/providers/auth.dart';
+import 'package:carl_touch_api/screens/box_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -63,7 +64,8 @@ class MainDrawer extends StatelessWidget {
             Icons.location_searching,
             'Localizzazioni',
             () {
-              Navigator.of(context).pushReplacementNamed('/');
+              Navigator.of(context)
+                  .pushReplacementNamed(BoxListScreen.routeName);
             },
           ),
           const Divider(),

@@ -6,7 +6,8 @@ class WorkOrder with ChangeNotifier {
   final String id;
   final String codice;
   final String descrizione;
-  final Map actionType;
+  final ActionType actionType;
+
   final String statusCode;
 
   WorkOrder({

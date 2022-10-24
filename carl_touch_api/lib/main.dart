@@ -1,8 +1,8 @@
-import 'package:carl_touch_api/providers/actiontypes.dart';
-import 'package:carl_touch_api/screens/actiontype_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/actiontypes.dart';
+import '../providers/boxes.dart';
 import '../providers/work_orders.dart';
 import '../providers/auth.dart';
 
@@ -10,6 +10,8 @@ import '../screens/auth_screen.dart';
 import '../screens/wo_list_screen.dart';
 import '../screens/splash_screen.dart';
 import '../screens/wo_detail_screen.dart';
+import '../screens/actiontype_list_screen.dart';
+import '../screens/box_list_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -41,7 +43,14 @@ class _MyAppState extends State<MyApp> {
             auth.token,
             previousActionTypes == null ? [] : previousActionTypes.actionTypes,
           ),
-        )
+        ),
+        ChangeNotifierProxyProvider<Auth, Boxes>(
+          update: (ctx, auth, previousBoxes) => Boxes(
+            auth.urlAmbiente,
+            auth.token,
+            previousBoxes == null ? [] : previousBoxes.boxes,
+          ),
+        ),
       ],
       child: Consumer<Auth>(
         builder: (ctx, auth, _) => MaterialApp(
@@ -66,6 +75,7 @@ class _MyAppState extends State<MyApp> {
           routes: {
             WoDetailScreen.routeName: (ctx) => WoDetailScreen(),
             ActionTypeListScreen.routeName: (ctx) => ActionTypeListScreen(),
+            BoxListScreen.routeName: (ctx) => BoxListScreen(),
           },
         ),
       ),

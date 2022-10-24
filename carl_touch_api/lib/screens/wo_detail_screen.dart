@@ -1,10 +1,13 @@
-import 'package:carl_touch_api/providers/actiontypes.dart';
-import 'package:carl_touch_api/providers/work_order.dart';
-import 'package:carl_touch_api/providers/work_orders.dart';
-import 'package:carl_touch_api/screens/actiontype_list_screen.dart';
-import 'package:carl_touch_api/widgets/flat_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../providers/actiontype.dart';
+import '../providers/actiontypes.dart';
+import '../providers/work_order.dart';
+import '../providers/work_orders.dart';
+
+import '../screens/actiontype_list_screen.dart';
+import '../widgets/flat_button.dart';
 
 class WoDetailScreen extends StatefulWidget {
   static const routeName = '/edit-wo';
@@ -18,17 +21,18 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
   var _isInit = true;
   var _isLoading = false;
 
-  var _actionType = TextEditingController(text: '');
+  var _actionType_code = '';
 
   var _editedWO = WorkOrder(
     id: null,
     codice: '',
     descrizione: '',
     statusCode: '',
-    actionType: {
-      'id': '',
-      'code': '',
-    },
+    actionType: ActionType(
+      id: null,
+      code: null,
+      description: null,
+    ),
   );
 
   var _initWOValues = {
@@ -45,49 +49,47 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
       if (woId != null) {
         _editedWO =
             Provider.of<WorkOrders>(context, listen: false).findById(woId);
-        // var actionType_code = Provider.of<ActionTypes>(context, listen: false)
-        //     .findById(_editedWO.actionType)
-        //     .code;
 
         _initWOValues = {
           'code': _editedWO.codice,
           'description': _editedWO.descrizione,
           'statusCode': _editedWO.statusCode,
-          //'actionType': _editedWO.actionType,
         };
-        _actionType.text = _editedWO.actionType['code'];
+        _actionType_code = _editedWO.actionType.code;
       }
     }
     _isInit = false;
     super.didChangeDependencies();
   }
 
-  Future<void> _searchList() async {
+  Future<void> _searchListActiontype() async {
     final result =
         await Navigator.of(context).pushNamed(ActionTypeListScreen.routeName);
     //print(result);
+    if (result != null) {
+      //_actionType.text = result;
+      setState(() {
+        _actionType_code = result ?? '';
+      });
 
-    _actionType.text = result;
-
-    _editedWO = WorkOrder(
-      id: _editedWO.id,
-      codice: _editedWO.codice,
-      descrizione: _editedWO.descrizione,
-      statusCode: _editedWO.statusCode,
-      actionType: {
-        'id': Provider.of<ActionTypes>(context, listen: false)
-            .findByCode(_actionType.text)
+      var actiontype = ActionType(
+        id: Provider.of<ActionTypes>(context, listen: false)
+            .findByCode(_actionType_code)
             .id,
-        'code': _actionType.text,
-      },
-    );
-  }
+        code: _actionType_code,
+        description: Provider.of<ActionTypes>(context, listen: false)
+            .findByCode(_actionType_code)
+            .description,
+      );
 
-  @override
-  void dispose() {
-    // Clean up the controller when the widget is disposed.
-    _actionType.dispose();
-    super.dispose();
+      _editedWO = WorkOrder(
+        id: _editedWO.id,
+        codice: _editedWO.codice,
+        descrizione: _editedWO.descrizione,
+        statusCode: _editedWO.statusCode,
+        actionType: actiontype,
+      );
+    }
   }
 
   Future<void> _saveForm() async {
@@ -166,7 +168,7 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
             children: [
               TextFormField(
                 initialValue: _initWOValues['code'],
-                decoration: InputDecoration(labelText: 'Codice'),
+                decoration: const InputDecoration(labelText: 'Codice'),
                 textInputAction: TextInputAction.next,
                 onSaved: (value) {
                   _editedWO = WorkOrder(
@@ -186,7 +188,7 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
               ),
               TextFormField(
                 initialValue: _initWOValues['description'],
-                decoration: InputDecoration(labelText: 'Titolo'),
+                decoration: const InputDecoration(labelText: 'Titolo'),
                 textInputAction: TextInputAction.next,
                 onSaved: (value) {
                   _editedWO = WorkOrder(
@@ -234,41 +236,21 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
                   return null;
                 },
               ),
-              TextFormField(
-                //onTap: _searchList,
-                decoration: InputDecoration(
-                  labelText: 'Natura',
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.search),
-                    onPressed: _searchList,
-                  ),
+              const SizedBox(height: 10),
+              const Text(
+                'Natura',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 117, 117, 117),
+                  fontSize: 11,
                 ),
-                textAlign: TextAlign.center,
-                readOnly: true,
-                //textInputAction: TextInputAction.done,
-                controller: _actionType,
-                // onSaved: (value) {
-                //   _editedWO = WorkOrder(
-                //     id: _editedWO.id,
-                //     codice: _editedWO.codice,
-                //     descrizione: _editedWO.descrizione,
-                //     statusCode: _editedWO.statusCode,
-                //     actionType: value,
-                //   );
-                // },
-                onEditingComplete: () {
-                  setState(() {});
-                },
-                onFieldSubmitted: (_) {
-                  _saveForm();
-                },
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Inserisci la natura.';
-                  }
-                  return null;
-                },
-              )
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: FlatButton(
+                  _searchListActiontype,
+                  Text(_actionType_code),
+                ),
+              ),
             ],
           ),
         ),

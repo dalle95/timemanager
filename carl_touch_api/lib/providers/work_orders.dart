@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:carl_touch_api/providers/actiontype.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -70,6 +71,8 @@ class WorkOrders with ChangeNotifier {
             // print(json.decode(actionType_response.body));
             var actionType_id = actionTypeData['data']['id'];
             var actionType_code = actionTypeData['data']['attributes']['code'];
+            var actonType_description =
+                actionTypeData['data']['attributes']['description'];
 
             // print('${wo['attributes']['code']}: $actionType_code');
             loadedWorkOrders.add(
@@ -78,10 +81,11 @@ class WorkOrders with ChangeNotifier {
                 codice: wo['attributes']['code'],
                 descrizione: wo['attributes']['description'],
                 statusCode: wo['attributes']['statusCode'],
-                actionType: {
-                  'id': actionType_id,
-                  'code': actionType_code,
-                },
+                actionType: ActionType(
+                  id: actionType_id,
+                  code: actionType_code,
+                  description: actonType_description,
+                ),
               ),
             );
             // print(wo['attributes']['code']);
@@ -117,7 +121,7 @@ class WorkOrders with ChangeNotifier {
                 "actionType": {
                   "data": {
                     "type": "actiontype",
-                    "id": workOrder.actionType['id'],
+                    "id": workOrder.actionType.id,
                   }
                 },
                 // "costCenter": {
@@ -146,10 +150,11 @@ class WorkOrders with ChangeNotifier {
         codice: workOrder.codice,
         descrizione: workOrder.descrizione,
         statusCode: workOrder.statusCode,
-        actionType: {
-          'id': workOrder.actionType['id'],
-          'code': workOrder.actionType['code'],
-        },
+        actionType: ActionType(
+          id: workOrder.actionType.id,
+          code: workOrder.actionType.code,
+          description: workOrder.actionType.description,
+        ),
         id: json.decode(response.body)['data']['id'],
       );
 
@@ -181,7 +186,7 @@ class WorkOrders with ChangeNotifier {
                   "actionType": {
                     "data": {
                       "type": "actiontype",
-                      "id": newWorkOrder.actionType['id'],
+                      "id": newWorkOrder.actionType.id,
                     }
                   },
                   // "costCenter": {

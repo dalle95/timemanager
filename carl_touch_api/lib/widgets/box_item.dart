@@ -1,27 +1,28 @@
-import 'package:carl_touch_api/screens/wo_detail_screen.dart';
 import 'package:flutter/material.dart';
 
-import '../providers/work_order.dart';
+import '../providers/box.dart';
 
-class WOItem extends StatefulWidget {
-  final WorkOrder workOrder;
+import '../screens/wo_detail_screen.dart';
 
-  WOItem(
-    this.workOrder,
+class BoxItem extends StatefulWidget {
+  final Box box;
+
+  BoxItem(
+    this.box,
   );
 
   @override
-  State<WOItem> createState() => _WOItemState();
+  State<BoxItem> createState() => _BoxItemState();
 }
 
-class _WOItemState extends State<WOItem> {
+class _BoxItemState extends State<BoxItem> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pushNamed(
-          WoDetailScreen.routeName,
-          arguments: widget.workOrder.id,
+          WoDetailScreen.routeName, // da modificare
+          arguments: widget.box.id,
         );
       },
       child: Card(
@@ -34,12 +35,12 @@ class _WOItemState extends State<WOItem> {
           padding: const EdgeInsets.all(5.0),
           child: ListTile(
             leading: Icon(
-              Icons.work,
+              Icons.location_city,
               color: Theme.of(context).accentColor,
               size: 40,
             ),
             title: Text(
-              widget.workOrder.descrizione ?? '',
+              widget.box.description ?? '',
               style: const TextStyle(
                 fontSize: 16,
               ),
@@ -47,9 +48,9 @@ class _WOItemState extends State<WOItem> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.workOrder.codice),
-                Text('Stato: ${widget.workOrder.statusCode}'),
-                Text('Natura: ${widget.workOrder.actionType.code}'),
+                Text(widget.box.code),
+                Text('Stato: ${widget.box.statusCode}'),
+                Text('Tipologia: ${widget.box.eqptType}'),
               ],
             ),
           ),
