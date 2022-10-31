@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<html>
+    <!doctype html>
+
+    <title>Caricamento massivo Items:</title>
+
+    <h1>Carica un file csv:</h1>
+    <form method=post enctype=multipart/form-data>
+      <input type=file name=file>
+      <input type=submit value=Carica>
+    </form>
+
+</html>
+{% endblock %}

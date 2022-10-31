@@ -1,0 +1,15 @@
+Buongiorno {{ user }},
+
+La informo che sono in scadenza i resi per i seguenti items:
+
+Codice | Descrizione | Data di scadenza
+{% if items %}
+{% for item in items %}
+
+{{ item.codice }}  | {{ item.descrizione }} | {{ item.data_scadenza_reso.strftime('%d/%m/%Y') }}
+
+{% endfor %}
+{% endif %}
+
+Saluti,
+Info Copping

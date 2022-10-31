@@ -1,0 +1,12 @@
+
+<tr>
+    {{loop.index}}
+    <td>
+        <a href="{{ url_for('negozio', descrizione=negozio.descrizione) }}">
+                    {{ negozio.descrizione }}
+        </a>
+    </td>
+    <td>
+        {{ negozio.giorni_reso }}
+    </td>
+</tr>

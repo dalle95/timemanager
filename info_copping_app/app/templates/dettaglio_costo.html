@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+
+<body>
+
+<form action="" method="post" class="form-horizontal">
+            {{ form.hidden_tag() }}
+    <div class="row">
+        <div class="col-md-12">
+                <div class="row mb-3 align-items-center">
+                    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                      <div class="container">
+                            <ul class="nav navbar-nav">
+                                <li>{{ form.submit_salva(class="btn btn-default navbar-btn") }}</li>
+                                <li>{{ form.submit_elimina(class="btn btn-default navbar-btn") }}</li>
+                                <a class="nav-link dropdown-toggle" href="" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Aggiungi Costo
+                                </a>
+                                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <li><a class="dropdown-item" href="{{ url_for('aggiungi_costo_singolo') }}">Aggiungi costo singolo</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('aggiungi_costo_periodico') }}">Aggiungi costo periodico</a></li>
+                                  </ul>
+                            </ul>
+                      </div>
+                    </nav>
+                </div>
+
+    <nav>
+      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <button class="nav-link active" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Generale</button>
+        <button class="nav-link" id="nav-pagamenti-tab" data-bs-toggle="tab" data-bs-target="#nav-pagamenti" type="button" role="tab" aria-controls="nav-pagamenti" aria-selected="true">Storico Pagamenti</button>
+      </div>
+    </nav>
+    <div class="tab-content" id="nav-tabContent">
+      <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+        <br>
+
+        <div class="row mb-3 align-items-center">
+            <h1>Dettaglio Costo</h1>
+        </div>
+
+        <div class="row mb-3 align-items-center">
+            <h5 style="color: blue;">Informazioni Costo</h5>
+        </div>
+
+        <div class="row">
+            <div class="row mb-3 align-items-center">
+                {{ form.descrizione.label(class="col-sm-2 control-label") }}
+                <div class="col-sm-7">
+                    {{ form.descrizione(class="form-control") }}
+                </div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+                {{ form.tipologia.label(class="col-sm-2 control-label") }}
+                <div class="col-sm-2">
+                {% if title == 'Dettaglio Costo Periodico' %}
+                    {{ form.tipologia(class="form-control", value="Pagamento Periodico", disabled=true) }}
+                {% else %}
+                    {{ form.tipologia(class="form-control", value="Pagamento Singolo", disabled=true) }}
+                {% endif %}
+                </div>
+                {% if title == 'Dettaglio Costo Periodico' %}
+                {{ form.fatturazione.label(class="col-sm-2 control-label") }}
+                <div class="col-sm-2">
+                {{ form.fatturazione(class="form-select") }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="row mb-3 align-items-center">
+                {{ form.costo.label(class="col-sm-2 control-label") }}
+                <div class="col-sm-2">
+                    <div class="input-group">
+                        <span class="input-group-text">€</span>
+                        {{ form.costo(class="form-control") }}
+                    </div>
+                </div>
+                {% if title == 'Dettaglio Costo Periodico' %}
+                {{ form.costo_attivo.label(class="col-sm-2 control-label") }}
+                <div class="col-sm-2">
+                {{ form.costo_attivo(class="checkbox") }}
+                </div>
+                {% endif %}
+            </div>
+
+            {% if title == 'Dettaglio Costo Periodico' %}
+            <div class="row mb-3 align-items-center">
+                {{ form.data_inizio.label(class="col-sm-2 control-label") }}
+                <div class="col-sm-2">
+                {% if costo %}
+                {{ form.data_inizio(class="form-control") }}
+                {% else %}
+                {{ form.data_inizio(class="form-control") }}
+                {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row mb-3 align-items-center">
+                {% if title == 'Dettaglio Costo Periodico' %}
+                {{ form.data_prox_pagamento.label(class="col-sm-2 control-label") }}
+                <div class="col-sm-2">
+                {{ form.data_prox_pagamento(class="form-control") }}
+                </div>
+                {% endif %}
+                {{ form.data_ultimo_pagamento.label(class="col-sm-2 control-label") }}
+                <div class="col-sm-2">
+                {{ form.data_ultimo_pagamento(class="form-control") }}
+                </div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+                {{ form.note.label(class="col-sm-2 control-label") }}
+                <div class="col-sm-7">
+                {{ form.note(class="form-control") }}
+                </div>
+            </div>
+
+            {% if costo %}
+            <div class="row mb-3 align-items-center">
+                <div class="col-sm-3">
+                    <button type="button" class="btn btn-primary btn" title="Aggiungi pagamento" data-bs-toggle="modal" data-bs-target="#modal-registra-pagamento" data-bs-descrizione="{{costo.descrizione}}" data-bs-costo="{{costo.costo}}"><i class="bi bi-cash-coin"></i> Registra pagamento</button>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+      <div class="tab-pane fade" id="nav-pagamenti" role="tabpanel" aria-labelledby="nav-pagamenti-tab">
+        <br>
+            <div class="row mb-3 align-items-center">
+                    <div class="col-sm-8"><h5 style="color: blue;">Acquisti Cliente</h5></div>
+                    </div>
+
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                    <tr>
+                      <th>N° Pagamenti</th>
+                      <th>Descrizione</th>
+                      <th>Costo</th>
+                      <th>Data di pagamento</th>
+                      <th></th>
+                    </tr>
+                </thead>
+
+                {% if storico_pagamenti %}
+
+                <tbody>
+
+                    {% for pagamento in storico_pagamenti %}
+
+                        <tr>
+                            <td>
+                                {{loop.index}}
+                            </td>
+                            <td>
+                                {{ pagamento.descrizione }}
+                            </td>
+                            <td>{{ pagamento.costo }}€ </td>
+                            <td>{{ pagamento.data_pagamento.strftime('%d/%m/%Y') }}</td>
+                            <td></td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+                <tfoot>
+
+                    <td>{{ n_pagamenti }}</td>
+                    <td>Totale</td>
+                    <td>{{ val_pagamenti }} €</td>
+                    <td></td>
+
+                </tfoot>
+                {% else %}
+                <tbody>
+                    <tr class="table">
+                          <td colspan="4" class="table-active">Nessun pagamento</td>
+                    </tr>
+                </tbody>
+                {% endif %}
+            </table>
+            </div>
+
+      </div>
+
+    </div>
+    </div>
+    </div>
+
+</form>
+
+{% if costo %}
+
+<form action="{{ url_for('registra_pagamento', id=costo.id) }}" method="post">
+    {{ form2.hidden_tag() }}
+
+    <div class="modal fade" id="modal-registra-pagamento" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Dettaglio Pagamento</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="descrizione" class="col-form-label">Descrizione:</label>
+                {{ form2.descrizione(class="form-control", id="descrizione_add") }}
+              </div>
+              <div class="mb-3">
+                <label for="costo" class="col-form-label">Costo:</label>
+                  <div class="col-sm-4">
+                    <div class="input-group">
+                        <span class="input-group-text">€</span>
+                        {{ form2.costo(class="form-control", id="costo_add") }}
+                    </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="data_pagamento" class="col-form-label">Data di pagamento:</label>
+                {{ form2.data_pagamento(class="form-control", id="data_pagamento_add") }}
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+            {{ form2.submit_registra(class="btn btn-primary") }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+</form>
+
+{% endif %}
+
+
+<script>
+var exampleModal = document.getElementById('modal-registra-pagamento')
+exampleModal.addEventListener('show.bs.modal', function (event) {
+
+  // Button that triggered the modal
+  var button = event.relatedTarget
+
+  // Extract info from data-bs-* attributes
+  var descrizione = button.getAttribute('data-bs-descrizione');
+  var costo = button.getAttribute('data-bs-costo');
+
+  // Update the modal's content.
+  var modalBodyInput_descrizione = document.getElementById("descrizione_add");
+  var modalBodyInput_costo = document.getElementById("costo_add");
+
+  modalBodyInput_descrizione.value = descrizione;
+  modalBodyInput_costo.value = costo;
+
+})
+</script>
+
+{% endblock %}

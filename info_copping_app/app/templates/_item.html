@@ -1,0 +1,74 @@
+{% if (title == 'Items reso in scadenza') %}
+<tr class="danger">
+    <td>
+        <a href="{{ url_for('item', codice=item.codice) }}">
+            {{ item.codice }}
+        </a>
+    </td>
+    <td>{{ item.descrizione }} </td>
+    <td>{{ item.stato }}</td>
+    <td>{{ item.prezzo }} €</td>
+    <td>{{ item.data_ordine.strftime('%d/%m/%Y') }} </td>
+</tr>
+{% elif (title == 'Items in consegna') or (title == 'Items in Stock') %}
+<tr class="warning">
+    <td>
+        <a href="{{ url_for('item', codice=item.codice) }}">
+            {{ item.codice }}
+        </a>
+    </td>
+    <td>{{ item.descrizione }} </td>
+    <td>{{ item.stato }}</td>
+    <td>{{ item.prezzo }} €</td>
+    <td>{{ item.data_ordine.strftime('%d/%m/%Y') }} </td>
+</tr>
+{% else %}
+
+{% if item.stato == 'Acquisto' %}
+<tr class="warning">
+    <td>
+        <a href="{{ url_for('item', codice=item.codice) }}">
+            {{ item.codice }}
+        </a>
+    </td>
+    <td>{{ item.descrizione }} </td>
+    <td>{{ item.stato }}</td>
+    <td>{{ item.prezzo }} €</td>
+    <td>{{ item.data_ordine.strftime('%d/%m/%Y') }} </td>
+    <td>{% if item.stato != 'Vendita' %}  {% else %} {{ item.incasso }} € {% endif %}</td>
+    <td>{% if item.stato != 'Vendita' %}  {% else %} {{ item.data_vendita.strftime('%d/%m/%Y') }} {% endif %}</td>
+
+</tr>
+{% elif item.stato == 'Vendita' %}
+<tr class="success">
+    <td>
+        <a href="{{ url_for('item', codice=item.codice) }}">
+            {{ item.codice }}
+        </a>
+    </td>
+    <td>{{ item.descrizione }} </td>
+    <td>{{ item.stato }}</td>
+    <td>{{ item.prezzo }} €</td>
+    <td>{{ item.data_ordine.strftime('%d/%m/%Y') }} </td>
+    <td>{% if item.stato != 'Vendita' %}  {% else %} {{ item.incasso }} € {% endif %}</td>
+    <td>{% if item.stato != 'Vendita' %}  {% else %} {{ item.data_vendita.strftime('%d/%m/%Y') }} {% endif %}</td>
+
+</tr>
+{% elif item.stato == 'Reso' %}
+<tr class="danger">
+    <td>
+        <a href="{{ url_for('item', codice=item.codice) }}">
+            {{ item.codice }}
+        </a>
+    </td>
+    <td>{{ item.descrizione }} </td>
+    <td>{{ item.stato }}</td>
+    <td>{{ item.prezzo }} €</td>
+    <td>{{ item.data_ordine.strftime('%d/%m/%Y') }} </td>
+    <td>{% if item.stato != 'Vendita' %}  {% else %} {{ item.incasso }} € {% endif %}</td>
+    <td>{% if item.stato != 'Vendita' %}  {% else %} {{ item.data_vendita.strftime('%d/%m/%Y') }} {% endif %}</td>
+
+</tr>
+{% endif %}
+
+{% endif %}

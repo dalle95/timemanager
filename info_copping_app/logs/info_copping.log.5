@@ -1,0 +1,75 @@
+2022-01-07 09:15:24,119 ERROR: Exception on /user/dalle95/profilo [GET] [in C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py:1457]
+Traceback (most recent call last):
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1802, in _execute_context
+    self.dialect.do_execute(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 719, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.OperationalError: server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 2073, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1518, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1514, in full_dispatch_request
+    rv = self.preprocess_request()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1857, in preprocess_request
+    rv = self.ensure_sync(before_func)()
+  File "C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\routes.py", line 144, in before_request
+    if current_user.is_authenticated:
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\werkzeug\local.py", line 432, in __get__
+    obj = instance._get_current_object()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\werkzeug\local.py", line 554, in _get_current_object
+    return self.__local()  # type: ignore
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask_login\utils.py", line 26, in <lambda>
+    current_user = LocalProxy(lambda: _get_user())
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask_login\utils.py", line 346, in _get_user
+    current_app.login_manager._load_user()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask_login\login_manager.py", line 318, in _load_user
+    user = self._user_callback(user_id)
+  File "C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\models.py", line 104, in load_user
+    return User.query.get(int(id))
+  File "<string>", line 2, in get
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\deprecations.py", line 401, in warned
+    return fn(*args, **kwargs)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\query.py", line 943, in get
+    return self._get_impl(ident, loading.load_on_pk_identity)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\query.py", line 947, in _get_impl
+    return self.session._get_impl(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2874, in _get_impl
+    return db_load_fn(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\loading.py", line 530, in load_on_pk_identity
+    session.execute(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 1689, in execute
+    result = conn._execute_20(statement, params or {}, execution_options)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1614, in _execute_20
+    return meth(self, args_10style, kwargs_10style, execution_options)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 325, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1481, in _execute_clauseelement
+    ret = self._execute_context(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1845, in _execute_context
+    self._handle_dbapi_exception(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 2026, in _handle_dbapi_exception
+    util.raise_(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\compat.py", line 207, in raise_
+    raise exception
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1802, in _execute_context
+    self.dialect.do_execute(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 719, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) server closed the connection unexpectedly
+	This probably means the server terminated abnormally
+	before or while processing the request.
+
+[SQL: SELECT "user".id AS user_id, "user".username AS user_username, "user".email AS user_email, "user".password_hash AS user_password_hash, "user".last_seen AS user_last_seen 
+FROM "user" 
+WHERE "user".id = %(pk_1)s]
+[parameters: {'pk_1': 1}]
+(Background on this error at: https://sqlalche.me/e/14/e3q8)
+2022-01-07 09:23:43,544 INFO: Info Copping startup [in C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\__init__.py:47]

@@ -1,0 +1,107 @@
+2022-01-07 09:23:48,094 ERROR: Exception on /user/dalle95/profilo [GET] [in C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py:1457]
+Traceback (most recent call last):
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1802, in _execute_context
+    self.dialect.do_execute(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 719, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.UndefinedColumn: column profilo.notifica_giorni_anticipo_resi does not exist
+LINE 1: ...profilo.notifiche_resi AS profilo_notifiche_resi, profilo.no...
+                                                             ^
+HINT:  Perhaps you meant to reference the column "profilo.notifica_giorni_aticipo_resi".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 2073, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1518, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1516, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1502, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask_login\utils.py", line 272, in decorated_view
+    return func(*args, **kwargs)
+  File "C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\routes.py", line 119, in profilo
+    profilo = Profilo.query.filter_by(user_id=user.id).first_or_404()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask_sqlalchemy\__init__.py", line 468, in first_or_404
+    rv = self.first()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\query.py", line 2810, in first
+    return self.limit(1)._iter().first()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\query.py", line 2894, in _iter
+    result = self.session.execute(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 1689, in execute
+    result = conn._execute_20(statement, params or {}, execution_options)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1614, in _execute_20
+    return meth(self, args_10style, kwargs_10style, execution_options)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 325, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1481, in _execute_clauseelement
+    ret = self._execute_context(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1845, in _execute_context
+    self._handle_dbapi_exception(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 2026, in _handle_dbapi_exception
+    util.raise_(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\util\compat.py", line 207, in raise_
+    raise exception
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1802, in _execute_context
+    self.dialect.do_execute(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 719, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column profilo.notifica_giorni_anticipo_resi does not exist
+LINE 1: ...profilo.notifiche_resi AS profilo_notifiche_resi, profilo.no...
+                                                             ^
+HINT:  Perhaps you meant to reference the column "profilo.notifica_giorni_aticipo_resi".
+
+[SQL: SELECT profilo.id AS profilo_id, profilo.notifiche_mensili AS profilo_notifiche_mensili, profilo.notifiche_resi AS profilo_notifiche_resi, profilo.notifica_giorni_anticipo_resi AS profilo_notifica_giorni_anticipo_resi, profilo.notifiche_bot AS profilo_notifiche_bot, profilo.notifica_giorni_anticipo_bot AS profilo_notifica_giorni_anticipo_bot, profilo.notifiche_proxy AS profilo_notifiche_proxy, profilo.notifica_giorni_anticipo_proxy AS profilo_notifica_giorni_anticipo_proxy, profilo.user_id AS profilo_user_id 
+FROM profilo 
+WHERE profilo.user_id = %(user_id_1)s 
+ LIMIT %(param_1)s]
+[parameters: {'user_id_1': 1, 'param_1': 1}]
+(Background on this error at: https://sqlalche.me/e/14/f405)
+2022-01-07 09:24:16,565 INFO: Info Copping startup [in C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\__init__.py:47]
+2022-01-07 09:24:30,461 INFO: Info Copping startup [in C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\__init__.py:47]
+2022-01-07 09:25:34,772 INFO: Info Copping startup [in C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\__init__.py:47]
+2022-01-07 09:25:41,853 ERROR: Exception on /user/dalle95/profilo [GET] [in C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py:1457]
+Traceback (most recent call last):
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 2073, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1518, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1516, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1502, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**req.view_args)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask_login\utils.py", line 272, in decorated_view
+    return func(*args, **kwargs)
+  File "C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\routes.py", line 143, in profilo
+    return render_template('dettaglio_profilo.html', title='Profilo', profilo=profilo, form=form)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 147, in render_template
+    return _render(
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 128, in _render
+    rv = template.render(context)
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1291, in render
+    self.environment.handle_exception()
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 925, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\templates\dettaglio_profilo.html", line 2, in top-level template code
+    {% import 'bootstrap/wtf.html' as wtf %}
+  File "C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\templates\base.html", line 1, in top-level template code
+    {% extends 'bootstrap/base.html' %}
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask_bootstrap\templates\bootstrap\base.html", line 1, in top-level template code
+    {% block doc -%}
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask_bootstrap\templates\bootstrap\base.html", line 4, in block 'doc'
+    {%- block html %}
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask_bootstrap\templates\bootstrap\base.html", line 20, in block 'html'
+    {% block body -%}
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\flask_bootstrap\templates\bootstrap\base.html", line 23, in block 'body'
+    {% block content -%}
+  File "C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\templates\base.html", line 81, in block 'content'
+    {% block app_content %}{% endblock %}
+  File "C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\templates\dettaglio_profilo.html", line 21, in block 'app_content'
+    {{ form.notifica_giorni_aticipo_resi.label }} {{ form.notifica_giorni_aticipo_resi(class="form-control") }}
+  File "C:\Users\Simone Dalle Vedove\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 474, in getattr
+    return getattr(obj, attribute)
+jinja2.exceptions.UndefinedError: 'app.forms.ProfiloForm object' has no attribute 'notifica_giorni_aticipo_resi'
+2022-01-07 09:27:43,508 INFO: Info Copping startup [in C:\Users\Simone Dalle Vedove\Desktop\Varie\Progetti Flask\info_copping - official\app\__init__.py:47]

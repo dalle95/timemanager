@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+
+<body onload="show_vendita_init()">
+    <form id="form" action="" method="post" class="form-horizontal">
+    {{ form.hidden_tag() }}
+
+    <div class="row mb-3 align-items-center">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container">
+            <ul class="nav navbar-nav">
+                <li>{{ form.submit_salva(class="btn btn-default navbar-btn") }}</li>
+                <li>{{ form.submit_elimina(class="btn btn-default navbar-btn") }}</li>
+                {% if form.codice.data %}
+                <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Gestisci stato
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            {% if form.stato.data == 'Acquisto' %}
+
+                            <li>{{ stato.venduto(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+                            <li>{{ stato.attesa_vendita(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+                            <li>{{ stato.reso(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+
+                            {% elif form.stato.data == 'Attesa vendita' %}
+                            <li>{{ stato.acquisto(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+                            <li>{{ stato.venduto(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+                            <li>{{ stato.reso(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+
+                            {% elif form.stato.data == 'Vendita' %}
+                            <li>{{ stato.acquisto(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+                            <li>{{ stato.attesa_vendita(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+                            <li>{{ stato.reso(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+
+                            {% elif form.stato.data == 'Reso' %}
+                            <li>{{ stato.acquisto(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+                            <li>{{ stato.venduto(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+                            <li>{{ stato.attesa_vendita(class="btn btn-default navbar-btn", style="border: 0 none; background: none;") }}</li>
+
+                            {% endif %}
+
+                        </ul>
+                </li>
+                {% endif %}
+                <li><button type="button" class="btn btn-default navbar-btn" onclick="location.href='{{ url_for('aggiungi_item') }}';">Aggiungi nuovo item</button></li>
+            </ul>
+      </div>
+    </nav>
+    </div>
+
+    <div class="row mb-3 align-items-center">
+        <h1>Dettaglio Item</h1>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <div class="row mb-3 align-items-center">
+                    <h5 style="color: blue;">Informazioni Acquisto</h5>
+                </div>
+            </div>
+                    <div class="row mb-3 align-items-center">
+                        {% if form.codice.data %}
+                            {{ form.codice.label(class="col-sm-2 control-label") }}
+                            <div class="col-sm-2">{{ form.codice(class="form-control", readonly=true) }}</div>
+                        {% endif %}
+                        {{ form.descrizione.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-6">{{ form.descrizione(class="form-control") }} </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        {{ form.stato.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">{{ form.stato(class="form-control", onchange='show_vendita("stato", "campi-vendita")', readonly=true) }}</div>
+                        {{ form.sku.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">{{ form.sku(class="form-control") }}</div>
+                        {{ form.region.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">{{ form.region(class="form-select") }}</div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        {{ form.prezzo.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                        <div class="input-group">
+                            <span class="input-group-text">€</span>
+                            {{ form.prezzo(class="form-control", placeholder="Amount") }}
+                        </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        {{ form.spedizione_acquisto.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            <div class="input-group">
+                                <span class="input-group-text">€</span>
+                                {{ form.spedizione_acquisto(class="form-control", placeholder="Amount") }}
+                            </div>
+                        </div>
+                        {{ form.reship.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            <div class="input-group">
+                                <span class="input-group-text">€</span>
+                                {{ form.reship(class="form-control", placeholder="Amount") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        {{ form.slot.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            <div class="input-group">
+                                <span class="input-group-text">€</span>
+                                {{ form.slot(class="form-control", placeholder="Amount") }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        {{ form.data_ordine.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.data_ordine(class="form-control", max="3000-12-31") }}
+                        </div>
+                        {{ form.consegna_stesso_giorno.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-1">
+                            {{ form.consegna_stesso_giorno(class="checkbox", onclick='compila_stessa_data("consegna_stesso_giorno", "data_ordine", "data_consegna")') }}
+                        </div>
+                        {{ form.data_consegna.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.data_consegna(class="form-control", max="3000-12-31") }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        {{ form.data_scadenza_reso.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.data_scadenza_reso(class="form-control", readonly=true) }}
+                        </div>
+                    </div>
+
+                    <div class="row mb-3 align-items-center">
+                        {{ form.negozio.label(class="col-sm-1 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.negozio(id="negozio", class="form-select") }}
+                        </div>
+                        <div class="col-sm-1" id="ricerca_negozio">
+                            <a id="trova_negozio" title="Dettaglio Negozio" href="" onclick='trova_elemento("trova_negozio", "negozio");'><i class="bi bi-bag-fill"></i></a>
+                        </div>
+                        {{ form.proxy.label(class="col-sm-1 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.proxy(id="proxy", class="form-select") }}
+                        </div>
+                        <div class="col-sm-1" id="ricerca_proxy">
+                            <a id="trova_proxy" title="Dettaglio Proxy" href="" onclick='trova_elemento("trova_proxy", "proxy");'><i class="bi bi-pc-display-horizontal"></i></a>
+                        </div>
+                        {{ form.bot.label(class="col-sm-1 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.bot(id="bot", class="form-select") }}
+                        </div>
+                        <div class="col-sm-1" id="ricerca_bot">
+                            <a id="trova_bot" title="Dettaglio Bot" href="" onclick='trova_elemento("trova_bot", "bot");'><i class="bi bi-robot"></i></a>
+                        </div>
+                    </div>
+                    <div class="row mb-3 align-items-center">
+                        {{ form.tipologia.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.tipologia(class="form-select") }}
+                        </div>
+                        {{ form.taglia.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.taglia(class="form-control") }}
+                        </div>
+                        {{ form.strategia.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.strategia(class="form-select") }}
+                        </div>
+                    </div>
+
+
+
+                <div id="campi-vendita" style="display:block">
+                <p>
+                <div class="row mb-3 align-items-center">
+                    <h5 style="color: blue;">Informazioni Vendita</h5>
+                </div>
+                    <div class="row mb-3 align-items-center">
+                        {{ form.incasso.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                        <div class="input-group">
+                        <span class="input-group-text">€</span>
+                        {{ form.incasso(class="form-control", placeholder="Amount") }}
+                        </div>
+                        </div>
+                        {{ form.spedizione_vendita.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                        <div class="input-group">
+                        <span class="input-group-text">€</span>
+                        {{ form.spedizione_vendita(class="form-control", placeholder="Amount") }}
+                        </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3 align-items-center">
+                        {{ form.fee_reship.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                        <div class="input-group">
+                        <span class="input-group-text">€</span>
+                        {{ form.fee_reship(class="form-control", placeholder="Amount") }}
+                        </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3 align-items-center">
+                        {{ form.data_vendita.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.data_vendita(class="form-control", max="3000-12-31") }}
+                        </div>
+                        {{ form.incasso_stesso_giorno.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-1">
+                            {{ form.incasso_stesso_giorno(class="checkbox", onclick='compila_stessa_data("incasso_stesso_giorno", "data_vendita", "data_incasso")') }}
+                        </div>
+                        {{ form.data_incasso.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.data_incasso(class="form-control", max="3000-12-31") }}
+                        </div>
+                    </div>
+                    <div class="row mb-3 align-items-center">
+                        {{ form.canale.label(class="col-sm-2 control-label") }}
+                        <div class="col-sm-2">
+                            {{ form.canale(class="form-control") }}
+                        </div>
+                        {{ form.cliente.label(class="col-sm-2 control-label") }}
+
+                        <div class="col-sm-2">
+                            {{ form.cliente(class="form-control", id="cliente", list="lista_clienti") }}
+                            <datalist id="lista_clienti">
+                                {% for cliente in clienti %}
+                                <option value="{{ cliente.nome }}">
+                                {% endfor %}
+                            </datalist>
+                        </div>
+
+                        <div class="col-sm-1" id="ricerca_cliente">
+                            <a id="trova_cliente" title="Dettaglio Cliente" href="" onclick='trova_elemento("trova_cliente", "cliente");'><i class="bi bi-person-fill"></i></a>
+                        </div>
+
+                    </div>
+
+
+            </p>
+        </div>
+
+        </div>
+    </div>
+<br>
+
+    </form>
+</body>
+
+<script>
+    function show_vendita_init() {
+        var stato = document.getElementById("stato");
+        var campi_vendita = document.getElementById("campi-vendita");
+        if (stato.value == 'Vendita'){
+            campi_vendita.style.display = "block";
+        }
+    }
+    function show_vendita(command, target) {
+        var stato = document.getElementById(command);
+        var campi_vendita = document.getElementById(target);
+        var bottone_vendita = document.getElementById("btn_vendita");
+
+        stato.value = 'Vendita'
+        campi_vendita.style.display = "block";
+        bottone_vendita.style.display = "none";
+    }
+    function compila_stessa_data(bool, data, data_da_compilare) {
+        var bool = document.getElementById(bool);
+        var data = document.getElementById(data);
+        var data_da_compilare = document.getElementById(data_da_compilare)
+
+        if (bool.checked  == true){
+            data_da_compilare.value = data.value;
+        }
+        else {
+           data_da_compilare.value = null;
+        }
+    }
+
+    function trova_elemento(link_id, elemento_id){
+    var link = document.getElementById(link_id);
+    var elemento = document.getElementById(elemento_id);
+    var route = "/trova_"+elemento.id+"/";
+    if(elemento.value == "")
+    link.href = "";
+    else{
+    link.href = route + elemento.value;
+    }
+    }
+</script>
+
+
+{% endblock %}
+

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container">
+        <ul class="nav navbar-nav">
+            <li><button type="button" class="btn btn-default navbar-btn" onclick="location.href='{{ url_for('aggiungi_negozio') }}';">Aggiungi Shop</button></li>
+        </ul>
+  </div>
+</nav>
+
+<p class="text-left">
+        <h1>Elenco Shops</h1>
+
+        <div class="table-responsive">
+        <table class="table table-hover">
+                <thead>
+                <tr>
+                      <th>N°</th>
+                      <th>Descrizione</th>
+                      <th>Giorni per il reso</th>
+                </tr>
+                </thead>
+
+                {% if negozi %}
+
+                    {% for negozio in negozi %}
+
+                    <tr>
+                        <td>
+                            {{loop.index}}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('negozio', descrizione=negozio.descrizione) }}">
+                                        {{ negozio.descrizione }}
+                            </a>
+                        </td>
+                        <td>
+                            {{ negozio.giorni_reso }}
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                {% else %}
+                    <tbody>
+                        <tr class="table">
+                              <td colspan="3" class="table-active">Nessuno shop</td>
+                        </tr>
+                    </tbody>
+                {% endif %}
+
+        </table>
+        </div>
+</p>
+
+
+<div class="text-center">
+    <div class="row">
+        <div class="col-md-5">
+        {% if not prev_url %}
+            <button type="button" class="btn btn-light" onclick="location.href='{{ prev_url or '#' }}';" disabled>Indietro</button>
+        {% else %}
+            <button type="button" class="btn btn-light" onclick="location.href='{{ prev_url or '#' }}';">Indietro</button>
+        {% endif %}
+        </div>
+
+        <div class="col-md-5">
+        {% if not next_url %}
+            <button type="button" class="btn btn-light" onclick="location.href='{{ next_url or '#' }}';" disabled>Avanti</button>
+        {% else %}
+            <button type="button" class="btn btn-light" onclick="location.href='{{ next_url or '#' }}';">Avanti</button>
+        {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}S

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+        <ul class="nav navbar-nav">
+            <li><button type="button" class="btn btn-default navbar-btn" onclick="location.href='{{ url_for('aggiungi_item') }}';">Aggiungi Item</button></li>
+        </ul>
+  </div>
+</nav>
+
+<p class="text-left">
+<h1>Elenco {{ title }}</h1>
+  <table id="data" class="table">
+      <thead>
+      <tr>
+        <th>Codice</th>
+        <th>Descrizione</th>
+        <th>Negozio</th>
+        <th>Prezzo</th>
+        <th>Data Ordine</th>
+        <th>Incasso</th>
+        <th>Data Vendita</th>
+      </tr>
+    </thead>
+
+
+      {% for item in items %}
+        <tr>
+          <td>
+            <a href="{{ url_for('item', codice=item.codice) }}">
+            {{ item.codice }}
+            </a>
+          </td>
+          <td>{{ item.descrizione }}</td>
+          <td>{{ item.negozio }} - {{ item.region }}</td>
+          <td>{{ item.prezzo }}</td>
+          <td>{{ item.data_ordine  }}</td>
+          <td>
+            {% if item.incasso %}
+              {{ item.incasso }}
+            {% else %}
+              0
+            {% endif %}
+          </td>
+          <td>{{ item.data_vendita }}</td>
+        </tr>
+      {% endfor %}
+
+  </table>
+
+</p>
+{% endblock %}
+
+
+{% block scripts %}
+  <script>
+    $(document).ready(function () {
+      $('#data').DataTable( {
+      "language": {
+            "lengthMenu": "Mostra _MENU_ items per pagina",
+            "zeroRecords": "Non è stato trovato nulla",
+            "info": "Pagina _PAGE_ di _PAGES_",
+            "infoEmpty": "Nessun item disponibile",
+            "infoFiltered": "(Filtrato dai _MAX_ items totali)"
+            }
+     });
+
+    });
+  </script>
+{% endblock %}
