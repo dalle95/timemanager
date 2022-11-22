@@ -10,6 +10,8 @@ import '../screens/box_list_screen.dart';
 import '../screens/actiontype_list_screen.dart';
 import '../widgets/flat_button.dart';
 
+enum tipologia { insert, update }
+
 class WoDetailScreen extends StatefulWidget {
   static const routeName = '/edit-wo';
 
@@ -21,14 +23,15 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
   final _form = GlobalKey<FormState>();
   var _isInit = true;
   var _isLoading = false;
+  var _tipologia;
 
-  // valore iniziale della natura
+  // Inizializzo il valore iniziale della natura
   var _actionType = ActionType(
     id: null,
     code: '',
     description: '',
   );
-  // valore iniziale del box
+  // Inizializzo il valore iniziale del box
   var _box = Box(
     id: null,
     code: '',
@@ -36,6 +39,7 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
     eqptType: '',
     statusCode: '',
   );
+  // Inizializzo il valore iniziale del WO sia nuovo che in modifica
   var _initWO = WorkOrder(
     id: null,
     codice: '',
@@ -54,7 +58,6 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
       statusCode: '',
     ),
   );
-  // valore iniziale del WO sia nuovo che in modifica
   var _editedWO = WorkOrder(
     id: null,
     codice: '',
@@ -74,6 +77,7 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
     ),
   );
 
+  // Inizializzo i valori iniziali dei textform
   var _initWOValues = {
     'code': '',
     'description': '',
@@ -88,7 +92,17 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
       if (woId != null) {
         _editedWO =
             Provider.of<WorkOrders>(context, listen: false).findById(woId);
-        _initWO = _editedWO;
+
+        _initWO = WorkOrder(
+          id: _editedWO.id,
+          codice: _editedWO.codice,
+          descrizione: _editedWO.descrizione,
+          statusCode: _editedWO.statusCode,
+          actionType: _editedWO.actionType,
+          box: _editedWO.box,
+        );
+
+        print(_initWO.box.id);
 
         _initWOValues = {
           'code': _editedWO.codice,
@@ -107,10 +121,8 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
   Future<void> _searchListActiontype() async {
     final result = await Navigator.of(context)
         .pushNamed(ActionTypeListScreen.routeName) as Map<String, dynamic>;
-    //print(result);
 
     if (result != null) {
-      //_actionType.text = result;
       setState(() {
         _actionType = ActionType(
           id: result['id'],
@@ -118,8 +130,6 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
           description: result['description'] ?? '',
         );
       });
-
-      //_editedWO.actionType = _actionType;
     }
   }
 
@@ -130,9 +140,8 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
         'function': 'search',
       },
     ) as Map<String, dynamic>;
-    //print(result);
+
     if (result != null) {
-      //_actionType.text = result;
       setState(() {
         _box = Box(
           id: result['id'],
@@ -142,8 +151,6 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
           statusCode: result['statusCode'],
         );
       });
-
-      //_editedWO.box = _box;
     }
   }
 
@@ -158,7 +165,8 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
       _isLoading = true;
     });
 
-    _initWO = _editedWO;
+    print(
+        'WO: id: ${_initWO.id}, code: ${_initWO.codice ?? ''}, description: ${_initWO.descrizione ?? ''}, natura: ${_initWO.actionType.code ?? ''}, box: ${_initWO.box.code ?? ''}');
 
     _editedWO.actionType = _actionType;
     _editedWO.box = _box;
@@ -167,16 +175,20 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
         'WO: id: ${_editedWO.id}, code: ${_editedWO.codice ?? ''}, description: ${_editedWO.descrizione ?? ''}, natura: ${_editedWO.actionType.code ?? ''}, box: ${_editedWO.box.code ?? ''}');
 
     if (_editedWO.id != null) {
-      //Per aggiornare un WO già esistente
-      print(
-          'id new WO: ${_editedWO.box.code ?? ''}, id init WO: ${_initWO.box.code ?? ''}');
-      await Provider.of<WorkOrders>(context, listen: false)
-          .updateWorkOrder(_editedWO.id, _initWO, _editedWO);
+      try {
+        //Per aggiornare un WO già esistente
+        await Provider.of<WorkOrders>(context, listen: false)
+            .updateWorkOrder(_editedWO.id, _initWO, _editedWO);
+        _tipologia = tipologia.update;
+      } catch (error) {
+        print(error);
+      }
     } else {
       try {
         // Per creare un WO
         await Provider.of<WorkOrders>(context, listen: false)
             .addWorkOrder(_editedWO);
+        _tipologia = tipologia.update;
       } catch (error) {
         print(error);
         await showDialog(
@@ -202,16 +214,29 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
     });
     Navigator.of(context).pop();
 
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('WorkOrder inserito!'),
-        duration: const Duration(
-          seconds: 2,
+    if (_tipologia == tipologia.insert) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('WorkOrder inserito!'),
+          duration: const Duration(
+            seconds: 2,
+          ),
+          action: SnackBarAction(label: 'Annulla', onPressed: () {}),
         ),
-        action: SnackBarAction(label: 'Annulla', onPressed: () {}),
-      ),
-    );
+      );
+    } else {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('WorkOrder aggiornato!'),
+          duration: const Duration(
+            seconds: 2,
+          ),
+          action: SnackBarAction(label: 'Annulla', onPressed: () {}),
+        ),
+      );
+    }
   }
 
   @override

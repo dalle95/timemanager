@@ -46,18 +46,16 @@ class WorkOrders with ChangeNotifier {
       );
       var extractedData = json.decode(response.body) as Map<String, dynamic>;
       final List<WorkOrder> loadedWorkOrders = [];
-      //print(json.decode(response.body));
 
       // Se non sono presenti WO esco dalla funzione
       if (extractedData['data'] == null) {
         return;
       }
 
+      // itero per ogni WO
       extractedData['data'].forEach(
         (wo) async {
           // Per estrarre la natura da ogni WO lancio una chiamata per ognuno
-          // print(wo['relationships']['actionType']['links']['related']
-          //     .toString());
           var actionTypeUrl = Uri.parse(
               wo['relationships']['actionType']['links']['related'].toString());
           try {
@@ -68,7 +66,7 @@ class WorkOrders with ChangeNotifier {
 
             var actionTypeData =
                 json.decode(actionTypeResponse.body) as dynamic;
-            // print(json.decode(actionType_response.body));
+
             var actiontype = ActionType(
               id: actionTypeData['data']['id'],
               code: actionTypeData['data']['attributes']['code'],
@@ -87,6 +85,7 @@ class WorkOrders with ChangeNotifier {
             var woeqptData =
                 json.decode(woeqptResponse.body) as Map<String, dynamic>;
 
+            // Inizializzo il BOX vuoto
             var boxLocation = Box(
               id: null,
               code: '',
@@ -95,47 +94,37 @@ class WorkOrders with ChangeNotifier {
               statusCode: '',
             );
 
-            //print(woeqptData);
+            // Recupero il Box associato al WO
+            for (var woeqpt in woeqptData['data']) {
+              // Controllo che il box sia collegato direttamente al WO
+              if (woeqpt['attributes']['directEqpt'] == true) {
+                var boxLocationUrl = Uri.parse(woeqpt['relationships']['eqpt']
+                        ['links']['related']
+                    .toString());
 
-            woeqptData['data'].forEach(
-              (woeqpt) async {
-                //print(woeqpt['attributes']['directEqpt']);
-                if (woeqpt['attributes']['directEqpt'] == true) {
-                  var boxLocationUrl = Uri.parse(woeqpt['relationships']['eqpt']
-                          ['links']['related']
-                      .toString());
-                  //print(woeqpt['relationships']['eqpt']['links']['related']);
+                var boxLocationResponse = await http.get(
+                  boxLocationUrl,
+                  headers: headers,
+                );
+                var boxLocationdData = json.decode(boxLocationResponse.body)
+                    as Map<String, dynamic>;
 
-                  var boxLocationResponse = await http.get(
-                    boxLocationUrl,
-                    headers: headers,
-                  );
-                  var boxLocationdData = json.decode(boxLocationResponse.body)
-                      as Map<String, dynamic>;
+                // Definisco il BOX associato al WO
+                boxLocation = Box(
+                  id: boxLocationdData['data']['id'],
+                  code: boxLocationdData['data']['attributes']['code'],
+                  description: boxLocationdData['data']['attributes']
+                      ['description'],
+                  eqptType: boxLocationdData['data']['attributes']['eqptType'],
+                  statusCode: boxLocationdData['data']['attributes']
+                      ['statusCode'],
+                );
+                // print(boxLocation.code);
+              }
+            }
 
-                  boxLocation.id = boxLocationdData['data']['attributes']['id'];
-                  boxLocation.code =
-                      boxLocationdData['data']['attributes']['code'];
-                  boxLocation.description =
-                      boxLocationdData['data']['attributes']['description'];
-                  boxLocation.eqptType =
-                      boxLocationdData['data']['attributes']['eqptType'];
-                  boxLocation.statusCode =
-                      boxLocationdData['data']['attributes']['statusCode'];
-                  // boxLocation = Box(
-                  //   id: boxLocationdData['data']['id'],
-                  //   code: boxLocationdData['data']['attributes']['code'],
-                  //   description: boxLocationdData['data']['attributes']
-                  //       ['description'],
-                  //   eqptType: boxLocationdData['data']['attributes']
-                  //       ['eqptType'],
-                  //   statusCode: boxLocationdData['data']['attributes']
-                  //       ['statusCode'],
-                  // );
-                  //print(boxLocation.code);
-                }
-              },
-            );
+            print(
+                'wo_code: ${wo['attributes']['code']}, actiontype_code: ${actiontype.code}, box_code: ${boxLocation.code}');
 
             loadedWorkOrders.add(
               WorkOrder(
@@ -147,17 +136,22 @@ class WorkOrders with ChangeNotifier {
                 box: boxLocation,
               ),
             );
-            // print(wo['attributes']['code']);
-            _workOrders = loadedWorkOrders;
-            notifyListeners();
           } catch (error) {
             throw error;
+          } finally {
+            // Ordino la lista in base al codice del WO
+            loadedWorkOrders.sort((a, b) => a.codice.compareTo(b.codice));
+
+            // Aggiorno la lista di WO
+            _workOrders = loadedWorkOrders;
           }
         },
       );
     } catch (error) {
-      //print(error.toString());
+      print(error.toString());
       throw error;
+    } finally {
+      notifyListeners();
     }
   }
 
@@ -334,6 +328,7 @@ class WorkOrders with ChangeNotifier {
 
         print('Stato wo: ${response.statusCode}');
 
+        // Se il nuovo WO ha un box non nullo
         if (newWorkOrder.box.id != null) {
           // Se il nuovo WO ha un box non nullo e il WO precendente aveva già associato un box
           if (newWorkOrder.box.id != null && initWorkOrder.box.id != null) {
