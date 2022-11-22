@@ -147,16 +147,15 @@ class WorkOrders with ChangeNotifier {
           }
         },
       );
+      notifyListeners();
     } catch (error) {
       print(error.toString());
       throw error;
-    } finally {
-      notifyListeners();
-    }
+    } finally {}
   }
 
   Future<void> addWorkOrder(WorkOrder workOrder, {int index = 0}) async {
-    //print('Box: ${workOrder.box.id}');
+    // Preparo l'header
     Map<String, String> headers = {
       "X-CS-Access-Token": authToken,
       "Content-Type": "application/vnd.api+json",

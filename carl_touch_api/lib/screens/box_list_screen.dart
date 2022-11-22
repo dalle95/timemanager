@@ -1,4 +1,5 @@
 import 'package:carl_touch_api/providers/box.dart';
+import 'package:carl_touch_api/screens/box_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -32,14 +33,14 @@ class BoxListScreen extends StatelessWidget {
                   value: box.itemCount.toString(),
                 ),
             child: const Text('Punti di struttura')),
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.add),
-        //     onPressed: () {
-        //       Navigator.of(context).pushNamed(WoDetailScreen.routeName);
-        //     },
-        //   ),
-        // ],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              Navigator.of(context).pushNamed(BoxDetailScreen.routeName);
+            },
+          ),
+        ],
       ),
       drawer: function == 'list' ? MainDrawer() : null,
       body: RefreshIndicator(

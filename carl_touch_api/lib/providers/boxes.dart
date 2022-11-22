@@ -62,12 +62,65 @@ class Boxes with ChangeNotifier {
               statusCode: box['attributes']['statusCode'],
             ),
           );
-          _boxes = loadedBoxes;
-          notifyListeners();
         },
       );
+      // Ordino la lista in base al codice del WO
+      loadedBoxes.sort((a, b) => a.code.compareTo(b.code));
+
+      // Aggiorno la lista dei Box
+      _boxes = loadedBoxes;
+      notifyListeners();
     } catch (error) {
       throw error;
     }
   }
+
+  Future<void> addBox(Box box, {int index = 0}) async {
+    Map<String, String> headers = {
+      "X-CS-Access-Token": authToken,
+      "Content-Type": "application/vnd.api+json",
+    };
+
+    final url = Uri.parse('$urlAmbiente/api/entities/v1/box');
+
+    final dataBox = json.encode(
+      {
+        'data': {
+          "type": "box",
+          "attributes": {
+            "code": box.code,
+            "description": box.description,
+            "statusCode": box.statusCode,
+            "eqptType": box.eqptType,
+          },
+          "relationships": {
+            "structure": {
+              "data": {"type": "structure", "id": "LOCATION"}
+            }
+          }
+        },
+      },
+    );
+
+    try {
+      final response = await http.post(
+        url,
+        body: dataBox,
+        headers: headers,
+      );
+
+      // Recupero l'ID del Box appena creato
+      box.id = json.decode(response.body)['data']['id'];
+
+      print('Stato box: ${json.decode(response.statusCode.toString())}');
+
+      // Aggiungo il Box appena creato alla lista
+      _boxes.insert(index, box);
+      notifyListeners();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  Future<void> updateBox(String id, Box initBox, Box newBox) async {}
 }

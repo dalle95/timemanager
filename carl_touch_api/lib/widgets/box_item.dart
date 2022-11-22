@@ -1,3 +1,4 @@
+import 'package:carl_touch_api/screens/box_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../providers/box.dart';
@@ -20,15 +21,22 @@ class _BoxItemState extends State<BoxItem> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).pop(
-          {
-            'id': widget.box.id,
-            'code': widget.box.code,
-            'description': widget.box.description,
-            'eqptType': widget.box.eqptType,
-            'statusCode': widget.box.statusCode,
-          },
-        );
+        if (widget.function == 'list') {
+          Navigator.of(context).pushNamed(
+            BoxDetailScreen.routeName,
+            arguments: widget.box.id,
+          );
+        } else {
+          Navigator.of(context).pop(
+            {
+              'id': widget.box.id,
+              'code': widget.box.code,
+              'description': widget.box.description,
+              'eqptType': widget.box.eqptType,
+              'statusCode': widget.box.statusCode,
+            },
+          );
+        }
       },
       child: Card(
         elevation: 2,

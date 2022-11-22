@@ -1,3 +1,4 @@
+import 'package:carl_touch_api/screens/box_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -76,6 +77,7 @@ class _MyAppState extends State<MyApp> {
             WoDetailScreen.routeName: (ctx) => WoDetailScreen(),
             ActionTypeListScreen.routeName: (ctx) => ActionTypeListScreen(),
             BoxListScreen.routeName: (ctx) => BoxListScreen(),
+            BoxDetailScreen.routeName: (ctx) => BoxDetailScreen(),
           },
         ),
       ),

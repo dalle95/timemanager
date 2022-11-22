@@ -188,7 +188,7 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
         // Per creare un WO
         await Provider.of<WorkOrders>(context, listen: false)
             .addWorkOrder(_editedWO);
-        _tipologia = tipologia.update;
+        _tipologia = tipologia.insert;
       } catch (error) {
         print(error);
         await showDialog(
@@ -228,12 +228,11 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
     } else {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('WorkOrder aggiornato!'),
-          duration: const Duration(
+          duration: Duration(
             seconds: 2,
           ),
-          action: SnackBarAction(label: 'Annulla', onPressed: () {}),
         ),
       );
     }
@@ -243,7 +242,7 @@ class _WoDetailScreenState extends State<WoDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edita il WO'),
+        title: Text('Dettaglio del WO'),
         actions: [
           IconButton(
             onPressed: _saveForm,
