@@ -122,5 +122,51 @@ class Boxes with ChangeNotifier {
     }
   }
 
-  Future<void> updateBox(String id, Box initBox, Box newBox) async {}
+  Future<void> updateBox(String id, Box initBox, Box newBox) async {
+    Map<String, String> headers = {
+      "X-CS-Access-Token": authToken,
+      "Content-Type": "application/vnd.api+json",
+    };
+
+    final boxIndex = _boxes.indexWhere((box) => box.id == id);
+
+    final url = Uri.parse('$urlAmbiente/api/entities/v1/box/$id');
+
+    final dataBox = json.encode(
+      {
+        'data': {
+          "type": "box",
+          "attributes": {
+            "code": newBox.code,
+            "description": newBox.description,
+            "statusCode": newBox.statusCode,
+            "eqptType": newBox.eqptType,
+          },
+          "relationships": {
+            "structure": {
+              "data": {"type": "structure", "id": "LOCATION"}
+            }
+          }
+        },
+      },
+    );
+
+    if (boxIndex >= 0) {
+      try {
+        final response = await http.patch(
+          url,
+          body: dataBox,
+          headers: headers,
+        );
+
+        print('Stato box: ${response.statusCode}');
+
+        // Aggiorno il Box nella lista
+        _boxes[boxIndex] = newBox;
+        notifyListeners();
+      } catch (error) {
+        throw error;
+      }
+    }
+  }
 }
