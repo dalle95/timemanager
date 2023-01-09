@@ -3,6 +3,8 @@ import 'package:app_segna_ore/providers/worktimes.dart';
 import 'package:app_segna_ore/screens/list/material_list_screen.dart';
 import 'package:app_segna_ore/screens/list/task_list_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_picker/flutter_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/actiontype.dart';
@@ -45,16 +47,17 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
   );
   var _commessa = carl.Material(
     id: null,
-    code: null,
-    description: null,
-    eqptType: null,
-    statusCode: null,
+    code: '',
+    description: '',
+    eqptType: '',
+    statusCode: '',
   );
 
   // Inizializzo il valore iniziale del ticket ore sia nuovo che in modifica
   var _initWorkTime = WorkTime(
     id: null,
     code: '',
+    data: DateTime.now(),
     task: Task(
       id: null,
       code: '',
@@ -73,9 +76,15 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
       eqptType: '',
       statusCode: '',
     ),
-    tempoLavorato: null,
-    tempoFatturato: null,
-    note: null,
+    tempoLavorato: const Duration(
+      hours: 0,
+      minutes: 0,
+    ),
+    tempoFatturato: const Duration(
+      hours: 0,
+      minutes: 0,
+    ),
+    note: '',
     addebitoTrasferta: null,
     distanzaSede: null,
     spesePasto: null,
@@ -86,6 +95,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
   var _editedWorkTime = WorkTime(
     id: null,
     code: '',
+    data: DateTime.now(),
     task: Task(
       id: null,
       code: '',
@@ -104,9 +114,15 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
       eqptType: '',
       statusCode: '',
     ),
-    tempoLavorato: null,
-    tempoFatturato: null,
-    note: null,
+    tempoLavorato: const Duration(
+      hours: 0,
+      minutes: 0,
+    ),
+    tempoFatturato: const Duration(
+      hours: 0,
+      minutes: 0,
+    ),
+    note: '',
     addebitoTrasferta: null,
     distanzaSede: null,
     spesePasto: null,
@@ -114,21 +130,6 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
     speseAltro: null,
     comune: null,
   );
-
-  // Inizializzo i valori iniziali dei textform
-  var _initWorkTimeValues = {
-    'occupationDate': '',
-    'uowner': '',
-    'tempoLavorato': '',
-    'tempoFatturato': '',
-    'note': '',
-    'addebitoTrasferta': '',
-    'distanzaSede': '',
-    'spesePasto': '',
-    'speseNotte': '',
-    'speseAltro': '',
-    'comune': '',
-  };
 
   @override
   void didChangeDependencies() {
@@ -140,6 +141,8 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
 
         _initWorkTime = WorkTime(
           id: _editedWorkTime.id,
+          code: _editedWorkTime.code,
+          data: _editedWorkTime.data,
           task: _editedWorkTime.task,
           commessa: _editedWorkTime.commessa,
           tempoLavorato: _editedWorkTime.tempoLavorato,
@@ -152,18 +155,6 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
           speseAltro: _editedWorkTime.speseAltro,
           comune: _editedWorkTime.comune,
         );
-
-        var _initWorkTimeValues = {
-          'tempoLavorato': _editedWorkTime.tempoLavorato,
-          'tempoFatturato': _editedWorkTime.tempoFatturato,
-          'note': _editedWorkTime.note,
-          'addebitoTrasferta': _editedWorkTime.addebitoTrasferta,
-          'distanzaSede': _editedWorkTime.distanzaSede,
-          'spesePasto': _editedWorkTime.spesePasto,
-          'speseNotte': _editedWorkTime.speseNotte,
-          'speseAltro': _editedWorkTime.speseAltro,
-          'comune': _editedWorkTime.comune,
-        };
 
         _task = _editedWorkTime.task;
         _commessa = _editedWorkTime.commessa;
@@ -191,8 +182,10 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
           statusCode: result['statusCode'] ?? '',
           cliente: result['cliente'] ?? '',
           commessa: result['commessa'] ?? '',
-          workflowTransitions: result['workflowTransitions'] ?? '',
+          workflowTransitions: result['workflowTransitions'] ?? [],
         );
+
+        _commessa = _task.commessa;
       });
     }
   }
@@ -217,6 +210,161 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
       });
     }
   }
+
+  void _showTimePickerTempoLavorato() async {
+    Picker(
+      adapter: NumberPickerAdapter(
+        data: <NumberPickerColumn>[
+          NumberPickerColumn(
+            initValue: _initWorkTime.tempoLavorato.inHours.toInt(),
+            begin: 0,
+            end: 999,
+            suffix: const Text(' ore'),
+          ),
+          NumberPickerColumn(
+            initValue: _initWorkTime.tempoLavorato.inMinutes.toInt(),
+            begin: 0,
+            end: 60,
+            suffix: const Text(' minuti'),
+            jump: 15,
+          ),
+        ],
+      ),
+      delimiter: <PickerDelimiter>[
+        PickerDelimiter(
+          child: Container(
+            width: 30.0,
+            alignment: Alignment.center,
+            child: const Icon(Icons.more_vert),
+          ),
+        )
+      ],
+      hideHeader: true,
+      confirmText: 'Conferma',
+      confirmTextStyle: TextStyle(
+        inherit: false,
+        color: Theme.of(context).colorScheme.secondary,
+        fontSize: 22,
+      ),
+      cancelText: 'Annulla',
+      cancelTextStyle: const TextStyle(
+        inherit: false,
+        color: Colors.black,
+        fontSize: 22,
+      ),
+      title: const Text(
+        'Inserisci la durata',
+        style: TextStyle(fontSize: 25),
+        textAlign: TextAlign.center,
+      ),
+      selectedTextStyle: TextStyle(
+        color: Theme.of(context).colorScheme.secondary,
+      ),
+      onConfirm: (Picker picker, List<int> value) {
+        setState(() {
+          _initWorkTime.tempoLavorato = Duration(
+              hours: picker.getSelectedValues()[0],
+              minutes: picker.getSelectedValues()[1]);
+        });
+      },
+    ).showDialog(context);
+  }
+
+  void _showTimePickerTempoFatturato() async {
+    Picker(
+      adapter: NumberPickerAdapter(
+        data: <NumberPickerColumn>[
+          NumberPickerColumn(
+            initValue: _initWorkTime.tempoFatturato.inHours.toInt(),
+            begin: 0,
+            end: 999,
+            suffix: const Text(' ore'),
+          ),
+          NumberPickerColumn(
+            initValue: _initWorkTime.tempoFatturato.inMinutes.toInt(),
+            begin: 0,
+            end: 60,
+            suffix: const Text(' minuti'),
+            jump: 15,
+          ),
+        ],
+      ),
+      delimiter: <PickerDelimiter>[
+        PickerDelimiter(
+          child: Container(
+            width: 30.0,
+            alignment: Alignment.center,
+            child: const Icon(Icons.more_vert),
+          ),
+        )
+      ],
+      hideHeader: true,
+      confirmText: 'Conferma',
+      confirmTextStyle: TextStyle(
+        inherit: false,
+        color: Theme.of(context).colorScheme.secondary,
+        fontSize: 22,
+      ),
+      cancelText: 'Annulla',
+      cancelTextStyle: const TextStyle(
+        inherit: false,
+        color: Colors.black,
+        fontSize: 22,
+      ),
+      title: const Text(
+        'Inserisci la durata',
+        style: TextStyle(fontSize: 25),
+        textAlign: TextAlign.center,
+      ),
+      selectedTextStyle: TextStyle(
+        color: Theme.of(context).colorScheme.secondary,
+      ),
+      onConfirm: (Picker picker, List<int> value) {
+        setState(() {
+          _initWorkTime.tempoFatturato = Duration(
+              hours: picker.getSelectedValues()[0],
+              minutes: picker.getSelectedValues()[1]);
+        });
+      },
+    ).showDialog(context);
+  }
+
+  void _mostraDatePicker() async {
+    DateTime pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(1970),
+      lastDate: DateTime(3000),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.secondary,
+              onPrimary: Theme.of(context).colorScheme.background,
+              onSurface: Colors.blueAccent,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+          child: child,
+        );
+      },
+    );
+
+    if (pickedDate == null) {
+      return;
+    }
+
+    setState(() {
+      _initWorkTime.data = pickedDate;
+    });
+  }
+
+  format(Duration d) =>
+      d.toString().split('.').first.padLeft(8, "0").substring(0, 5);
 
   Future<void> _saveForm() async {
     var isValid = _form.currentState.validate();
@@ -247,9 +395,9 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
       }
     } else {
       try {
-        // Per creare un WO
-        // await Provider.of<WorkTimes>(context, listen: false)
-        //     .addWorkTime(_editedWorkTime);
+        // Per creare un WorkTime
+        await Provider.of<WorkTimes>(context, listen: false)
+            .addWorkTime(_editedWorkTime);
         _tipologia = tipologia.insert;
       } catch (error) {
         print(error);
@@ -305,6 +453,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Descrizione ticket'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
             onPressed: _saveForm,
@@ -325,79 +474,45 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
               //   width: double.infinity,
               //   height: 30,
               // ),
-              TextFormField(
-                initialValue: _initWorkTimeValues['code'],
-                decoration: const InputDecoration(labelText: 'Codice'),
-                textInputAction: TextInputAction.next,
-                onSaved: (value) {
-                  // _editedWorkTime = WorkTime(
-                  //   id: _editedWorkTime.id,
-                  //   codice: value,
-                  //   descrizione: _editedWorkTime.descrizione,
-                  //   statusCode: _editedWorkTime.statusCode,
-                  //   actionType: _editedWorkTime.actionType,
-                  // );
-                },
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Inserisci il codice.';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                initialValue: _initWorkTimeValues['description'],
-                decoration: const InputDecoration(labelText: 'Titolo'),
-                textInputAction: TextInputAction.next,
-                onSaved: (value) {
-                  // _editedWorkTime = WorkTime(
-                  //   id: _editedWorkTime.id,
-                  //   codice: _editedWorkTime.codice,
-                  //   descrizione: value,
-                  //   statusCode: _editedWorkTime.statusCode,
-                  //   actionType: _editedWorkTime.actionType,
-                  // );
-                },
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Inserisci un titolo.';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                initialValue: _initWorkTimeValues['statusCode'],
-                decoration: const InputDecoration(
-                  labelText: 'Stato',
+              // TextFormField(
+              //   initialValue: _initWorkTime.code, //_initWorkTimeValues['code'],
+              //   decoration: const InputDecoration(labelText: 'Codice'),
+              //   textInputAction: TextInputAction.next,
+              //   readOnly: true,
+              //   onSaved: (value) {
+              //     // _editedWorkTime = WorkTime(
+              //     //   id: _editedWorkTime.id,
+              //     //   codice: value,
+              //     //   descrizione: _editedWorkTime.descrizione,
+              //     //   statusCode: _editedWorkTime.statusCode,
+              //     //   actionType: _editedWorkTime.actionType,
+              //     // );
+              //   },
+              //   validator: (value) {
+              //     if (value.isEmpty) {
+              //       return 'Inserisci il codice.';
+              //     }
+              //     return null;
+              //   },
+              // ),
+              const Text(
+                'Data',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 117, 117, 117),
+                  fontSize: 11,
                 ),
-                textAlign: TextAlign.center,
-                readOnly: true,
-                textInputAction: TextInputAction.next,
-                onSaved: (value) {
-                  // _editedWorkTime = WorkTime(
-                  //   id: _editedWorkTime.id,
-                  //   codice: _editedWorkTime.codice,
-                  //   descrizione: _editedWorkTime.descrizione,
-                  //   statusCode: value,
-                  //   actionType: _editedWorkTime.actionType,
-                  // );
-                },
-                onEditingComplete: () {
-                  setState(() {});
-                },
-                onFieldSubmitted: (_) {
-                  _saveForm();
-                },
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Inserisci lo stato.';
-                  }
-                  return null;
-                },
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: FlatButton(
+                  _mostraDatePicker,
+                  Text(DateFormat('dd/MM/yyyy').format(_initWorkTime.data) ??
+                      ''),
+                ),
               ),
               const SizedBox(height: 10),
               const Text(
-                'Natura',
+                'Task',
                 style: TextStyle(
                   color: Color.fromARGB(255, 117, 117, 117),
                   fontSize: 11,
@@ -412,7 +527,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
               ),
               const SizedBox(height: 10),
               const Text(
-                'Punto di struttura',
+                'Commessa',
                 style: TextStyle(
                   color: Color.fromARGB(255, 117, 117, 117),
                   fontSize: 11,
@@ -422,15 +537,75 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: FlatButton(
                   _searchListMaterial,
-                  Text(_commessa.code ?? ''),
+                  Text(_commessa.code),
                 ),
               ),
+              const SizedBox(height: 10),
+              const Text(
+                'Tempo lavorato',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 117, 117, 117),
+                  fontSize: 11,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: FlatButton(
+                  _showTimePickerTempoLavorato,
+                  Text('${format(_initWorkTime.tempoLavorato)}'),
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Tempo fatturato',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 117, 117, 117),
+                  fontSize: 11,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: FlatButton(
+                  _showTimePickerTempoFatturato,
+                  Text('${format(_initWorkTime.tempoFatturato)}'),
+                ),
+              ),
+              TextFormField(
+                initialValue: _initWorkTime.note,
+                decoration: const InputDecoration(labelText: 'Note'),
+                textInputAction: TextInputAction.done,
+                minLines: 6,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                onSaved: (value) {
+                  // _editedWorkTime = WorkTime(
+                  //   id: _editedWorkTime.id,
+                  //   codice: value,
+                  //   descrizione: _editedWorkTime.descrizione,
+                  //   statusCode: _editedWorkTime.statusCode,
+                  //   actionType: _editedWorkTime.actionType,
+                  // );
+                },
+                onEditingComplete: () {
+                  setState(() {});
+                },
+                onFieldSubmitted: (_) {
+                  _saveForm();
+                },
+                validator: (value) {
+                  if (value.isEmpty) {
+                    return 'Inserisci delle note.';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 10),
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: _saveForm,
         child: const Icon(Icons.send),
       ),
     );

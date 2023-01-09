@@ -45,15 +45,15 @@ class AuthScreen extends StatelessWidget {
                   Flexible(
                     child: Container(
                       width: deviceSize.width * 0.75,
-                      margin: EdgeInsets.all(10.0),
-                      padding:
-                          EdgeInsets.symmetric(vertical: 8.0, horizontal: 50.0),
+                      margin: const EdgeInsets.all(10.0),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 50.0),
                       // transform: Matrix4.rotationZ(-8 * pi / 180)
                       //   ..translate(-10.0),
                       // ..translate(-10.0),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
-                        color: Theme.of(context).accentColor,
+                        color: Theme.of(context).colorScheme.secondary,
                         boxShadow: const [
                           BoxShadow(
                             blurRadius: 8,
@@ -62,22 +62,21 @@ class AuthScreen extends StatelessWidget {
                           )
                         ],
                       ),
-                      child: Text(
+                      child: const Text(
                         'Time Manager',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color:
-                              Theme.of(context).accentTextTheme.headline6.color,
-                          fontSize: 30,
+                          color: Colors.white,
+                          fontSize: 25,
                           //fontFamily: 'Anton',
-                          fontWeight: FontWeight.normal,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
                   Flexible(
                     flex: deviceSize.width > 600 ? 2 : 1,
-                    child: AuthCard(),
+                    child: const AuthCard(),
                   ),
                 ],
               ),
@@ -224,6 +223,9 @@ class _AuthCardState extends State<AuthCard> {
                   onSaved: (value) {
                     _authData['password'] = value;
                   },
+                  onFieldSubmitted: (_) {
+                    _submit();
+                  },
                 ),
                 const SizedBox(
                   height: 20,
@@ -234,7 +236,7 @@ class _AuthCardState extends State<AuthCard> {
                   RaiseButton(
                     _submit,
                     const Text('Connessione'),
-                    Theme.of(context).accentColor,
+                    Theme.of(context).colorScheme.secondary,
                   ),
               ],
             ),

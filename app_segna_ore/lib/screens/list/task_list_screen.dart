@@ -14,7 +14,7 @@ class TaskListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Future<void> _refreshProducts(BuildContext context) async {
+    Future<void> _refreshTasks(BuildContext context) async {
       await Provider.of<Tasks>(context, listen: false).fetchAndSetTasks();
     }
 
@@ -30,17 +30,20 @@ class TaskListScreen extends StatelessWidget {
                   value: wo.itemCount.toString(),
                 ),
             child: const Text('Attività')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.of(context).pushNamed(TaskDetailScreen.routeName);
-            },
-          ),
-        ],
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        actions: function == 'search'
+            ? null
+            : [
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () {
+                    Navigator.of(context).pushNamed(TaskDetailScreen.routeName);
+                  },
+                ),
+              ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => _refreshProducts(context),
+        onRefresh: () => _refreshTasks(context),
         child: FutureBuilder(
           future: Provider.of<Tasks>(context, listen: false).fetchAndSetTasks(),
           builder: (ctx, dataSnapshot) {
@@ -53,19 +56,21 @@ class TaskListScreen extends StatelessWidget {
                 );
                 //Error
               } else {
-                return TaskList();
+                return TaskList(function);
               }
             }
           },
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).pushNamed(TaskDetailScreen.routeName);
-        },
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: function == 'search'
+          ? null
+          : FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).pushNamed(TaskDetailScreen.routeName);
+              },
+              child: const Icon(Icons.add),
+            ),
     );
   }
 }

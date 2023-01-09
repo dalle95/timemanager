@@ -7,40 +7,58 @@ class Settings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget buildListTile(IconData icon, String text, Function tapHandler) {
-      return ListTile(
-        leading: Icon(
-          icon,
-          size: 25,
-        ),
-        title: Text(
-          text,
-          style: const TextStyle(
-            //fontFamily: 'Lato',
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+      return Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.background,
+          borderRadius: const BorderRadius.all(
+            Radius.circular(5),
           ),
         ),
-        onTap: tapHandler,
+        child: ListTile(
+          leading: Icon(
+            icon,
+            size: 25,
+          ),
+          title: Text(
+            text,
+            style: const TextStyle(
+              //fontFamily: 'Lato',
+              fontSize: 20,
+              //fontWeight: FontWeight.bold,
+            ),
+          ),
+          onTap: tapHandler,
+        ),
       );
     }
 
     return Container(
-      color: Colors.white,
-      padding: EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).primaryColor,
+            Theme.of(context).primaryColorDark,
+            // Color.fromRGBO(255, 121, 0, 1),
+            // Colors.black,
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          stops: const [0, 1],
+        ),
+      ),
+      child: ListView(
+        padding: const EdgeInsets.all(20),
         children: [
           Container(
             alignment: Alignment.bottomLeft,
-            color: Colors.white,
             padding: const EdgeInsets.all(20),
             width: double.infinity,
             height: 120,
             child: Text(
-              'Time Manager',
+              'Altro',
               style: TextStyle(
-                color: Theme.of(context).accentColor,
+                color: Theme.of(context).colorScheme.background,
                 fontSize: 30,
-                fontWeight: FontWeight.w900,
               ),
             ),
           ),

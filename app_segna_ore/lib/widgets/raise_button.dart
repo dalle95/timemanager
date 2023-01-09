@@ -12,12 +12,12 @@ class RaiseButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ButtonStyle raisedButtonStyle = ElevatedButton.styleFrom(
-      onPrimary: onPrimary,
-      primary: primary,
+      foregroundColor: onPrimary,
+      backgroundColor: primary,
       minimumSize: Size(88, 36),
       padding: EdgeInsets.symmetric(horizontal: 16),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(2)),
+        borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
     );
     return ElevatedButton(

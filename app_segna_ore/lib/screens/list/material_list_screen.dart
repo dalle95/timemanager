@@ -29,6 +29,7 @@ class MaterialListScreen extends StatelessWidget {
                   value: material.itemCount.toString(),
                 ),
             child: const Text('Commesse attive')),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         // actions: [
         //   IconButton(
         //     icon: const Icon(Icons.add),

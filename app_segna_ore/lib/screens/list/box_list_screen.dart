@@ -33,6 +33,7 @@ class BoxListScreen extends StatelessWidget {
                   value: box.itemCount.toString(),
                 ),
             child: const Text('Punti di struttura')),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),

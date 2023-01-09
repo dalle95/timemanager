@@ -21,7 +21,8 @@ class ActionTypeListScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Elenco'),
+        title: const Text('Elenco'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: RefreshIndicator(
         onRefresh: () => _refreshActionTypes(context),

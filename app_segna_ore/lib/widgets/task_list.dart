@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class TaskList extends StatelessWidget {
+  final String function;
+
+  TaskList(this.function);
+
   @override
   Widget build(BuildContext context) {
     final taskData = Provider.of<Tasks>(context);
@@ -21,7 +25,7 @@ class TaskList extends StatelessWidget {
           )
         : ListView.builder(
             itemCount: tasks.length,
-            itemBuilder: (ctx, i) => TaskItem(tasks[i]),
+            itemBuilder: (ctx, i) => TaskItem(tasks[i], function),
           );
   }
 }

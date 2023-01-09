@@ -1,10 +1,8 @@
-import 'package:app_segna_ore/widgets/homepage.dart';
-import 'package:app_segna_ore/widgets/settings.dart';
-import 'package:app_segna_ore/widgets/statistics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/foundation/key.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
+
+import '../widgets/homepage.dart';
+import '../widgets/settings.dart';
+import '../widgets/statistics.dart';
 
 class TabsScreen extends StatefulWidget {
   static const routeName = '/home';
@@ -34,9 +32,9 @@ class _TabsScreenState extends State<TabsScreen> {
       body: _pages[_selectedPageIndex],
       bottomNavigationBar: BottomNavigationBar(
         onTap: _selectPage,
-        backgroundColor: Theme.of(context).accentColor,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.background,
+        selectedItemColor: Theme.of(context).colorScheme.secondary,
+        unselectedItemColor: Colors.grey,
         currentIndex: _selectedPageIndex,
         items: const [
           BottomNavigationBarItem(

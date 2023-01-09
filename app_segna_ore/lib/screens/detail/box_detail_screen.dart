@@ -154,11 +154,12 @@ class _BoxDetailScreenState extends State<BoxDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dettaglio del Box'),
+        title: const Text('Dettaglio del Box'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
             onPressed: _saveForm,
-            icon: Icon(Icons.save),
+            icon: const Icon(Icons.save),
           )
         ],
       ),

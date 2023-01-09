@@ -49,7 +49,7 @@ class _MaterialItemState extends State<MaterialItem> {
           child: ListTile(
             leading: Icon(
               Icons.location_city,
-              color: Theme.of(context).accentColor,
+              color: Theme.of(context).colorScheme.secondary,
               size: 40,
             ),
             title: Text(

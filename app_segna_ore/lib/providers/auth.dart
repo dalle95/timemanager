@@ -80,6 +80,7 @@ class Auth with ChangeNotifier {
         responseData = json.decode(response.body);
         _userId = responseData['data']['id'];
         _actorName = responseData['data']['attributes']['fullName'];
+
         print(_actorName);
       } catch (error) {
         print(error);

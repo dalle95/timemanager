@@ -49,7 +49,7 @@ class _BoxItemState extends State<BoxItem> {
           child: ListTile(
             leading: Icon(
               Icons.location_city,
-              color: Theme.of(context).accentColor,
+              color: Theme.of(context).colorScheme.secondary,
               size: 40,
             ),
             title: Text(

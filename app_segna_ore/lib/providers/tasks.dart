@@ -35,192 +35,238 @@ class Tasks with ChangeNotifier {
 
   // Metodo per estrarre i task tramite richiesta http
   Future<void> fetchAndSetTasks([bool filterByUser = false]) async {
+    // Definizione elenco Tasks
+    final List<Task> loadedTasks = [];
+
+    DateTime init = DateTime.now();
+
+    // Inizializzazione Header
     Map<String, String> headers = {
       "X-CS-Access-Token": authToken,
     };
+
+    // Definizione url per estrazione Task
     var url = Uri.parse(
-        '$urlAmbiente/api/entities/v1/wo?fields=code,description,statusCode,actionType,createdBy,equipments&include=actionType,createdBy,equipments&filter[wo][actionType.code]=BUG');
+        '$urlAmbiente/api/entities/v1/woresources?include=WO&filter[technician.actor.id]=$userId');
 
     try {
+      // Creazione chiamata per estrazione Tasks
       var response = await http.get(
         url,
         headers: headers,
       );
+
+      // Estrazione Tasks
       var extractedData = json.decode(response.body) as Map<String, dynamic>;
-      final List<Task> loadedTasks = [];
 
       // Se non sono presenti WO esco dalla funzione
-      if (extractedData['data'] == null) {
+      if (extractedData['included'] == null) {
         return;
       }
 
-      // itero per ogni WO
-      extractedData['data'].forEach(
-        (wo) async {
-          var actionType = ActionType(
-            id: null,
-            code: null,
-            description: null,
+      // Iterazione per ogni risultato
+      //extractedData['data'].forEach(
+      //(wo) async {
+      for (var wo in extractedData['included']) {
+        // Inizializzazione natura vuota
+        var actionType = ActionType(
+          id: null,
+          code: null,
+          description: null,
+        );
+
+        // Per estrazione della natura controllo l'uguaglianza dell'ID con quello nell'include
+        // for (var wo in extractedData['included']) {
+        // if (actiontype['id'] ==
+        //     wo['relationships']['actionType']['data']['id']) {
+        // Definizione natura
+
+        // Definizione Url actionType
+        var actionTypeUrl =
+            Uri.parse(wo['relationships']['actionType']['links']['related']);
+
+        // Creazione chiamata actionType
+        var actionTypeResponse = await http.get(
+          actionTypeUrl,
+          headers: headers,
+        );
+
+        // Estrazione risultati
+        var actionTypeData =
+            json.decode(actionTypeResponse.body) as Map<String, dynamic>;
+
+        // Assegnazione natura
+        actionType = ActionType(
+          id: actionTypeData['id'],
+          code: actionTypeData['data']['attributes']['code'],
+          description: actionTypeData['data']['attributes']['description'],
+        );
+        // break;
+        // }
+        // }
+
+        // Inizializzazione del BOX  e material vuoto
+        var boxLocation = Box(
+          id: null,
+          code: '',
+          description: '',
+          eqptType: '',
+          statusCode: '',
+        );
+        var material = carl.Material(
+          id: null,
+          code: '',
+          description: '',
+          eqptType: '',
+          statusCode: '',
+        );
+
+        try {
+          // Definizione Url WOEqpt
+          var woEqptUrl =
+              Uri.parse(wo['relationships']['equipments']['links']['related']);
+
+          // Creazione chiamata actionType
+          var woEqptResponse = await http.get(
+            woEqptUrl,
+            headers: headers,
           );
-          // Per estrarre la natura controllo l'uguaglianza dell'ID con quello nell'include
-          for (var actiontype in extractedData['included']) {
-            if (actiontype['id'] ==
-                wo['relationships']['actionType']['data']['id']) {
-              // Inizializzazione natura
-              actionType = ActionType(
-                id: actiontype['id'],
-                code: actiontype['attributes']['code'],
-                description: actiontype['attributes']['description'],
-              );
-            }
-          }
 
-          // Inizializzo il BOX  e material vuoto
-          var boxLocation = Box(
-            id: null,
-            code: '',
-            description: '',
-            eqptType: '',
-            statusCode: '',
-          );
+          // Estrazione risultati
+          var woEqptData =
+              json.decode(woEqptResponse.body) as Map<String, dynamic>;
 
-          var material = carl.Material(
-            id: null,
-            code: '',
-            description: '',
-            eqptType: '',
-            statusCode: '',
-          );
-          // var woeqptUrl = Uri.parse(
-          //     wo['relationships']['equipments']['links']['related'].toString());
-
-          // var woeqptResponse = await http.get(
-          //   woeqptUrl,
-          //   headers: headers,
-          // );
-
-          // var woeqptData =
-          //     json.decode(woeqptResponse.body) as Map<String, dynamic>;
-
-          try {
-            // Recupero il Box associato al WO
-            for (var woeqpt in extractedData['included']) {
-              // Controllo che il box sia collegato direttamente al WO
-              if (woeqpt['attributes']['directEqpt'] == true ||
-                  woeqpt['attributes']['referEqpt'] == true) {
-                if (woeqpt['attributes']['directEqpt'] == true &&
-                    woeqpt['attributes']['referEqpt'] == false) {
-                  var boxLocationUrl = Uri.parse(woeqpt['relationships']['eqpt']
-                          ['links']['related']
-                      .toString());
-
-                  var boxLocationResponse = await http.get(
-                    boxLocationUrl,
-                    headers: headers,
-                  );
-                  var boxLocationdData = json.decode(boxLocationResponse.body)
-                      as Map<String, dynamic>;
-
-                  // Definisco il BOX associato al WO
-                  boxLocation = Box(
-                    id: boxLocationdData['data']['id'],
-                    code: boxLocationdData['data']['attributes']['code'],
-                    description: boxLocationdData['data']['attributes']
-                            ['description'] ??
-                        '',
-                    eqptType: boxLocationdData['data']['attributes']
-                        ['eqptType'],
-                    statusCode: boxLocationdData['data']['attributes']
-                        ['statusCode'],
-                  );
-                }
-                // print(boxLocation.code);
-              }
-              if (woeqpt['attributes']['referEqpt'] == true) {
-                var materialUrl = Uri.parse(woeqpt['relationships']['eqpt']
-                        ['links']['related']
-                    .toString());
-
-                var materialResponse = await http.get(
-                  materialUrl,
+          // Itero per i WOEqpt
+          for (var woeqpt in woEqptData['data']) {
+            // Controllo Box e Material associato al WO
+            if (woeqpt['attributes']['directEqpt'] == true ||
+                woeqpt['attributes']['referEqpt'] == true) {
+              // Controllo box collegato direttamente al WO
+              if (woeqpt['attributes']['directEqpt'] == true &&
+                  woeqpt['attributes']['referEqpt'] == false) {
+                // Definizione url BOX
+                var boxLocationUrl = Uri.parse(
+                    woeqpt['relationships']['eqpt']['links']['related']);
+                // Creazione chiamata per estrazione BOX
+                var boxLocationResponse = await http.get(
+                  boxLocationUrl,
                   headers: headers,
                 );
-                var materialData =
-                    json.decode(materialResponse.body) as Map<String, dynamic>;
+                // Definizione risultati
+                var boxLocationdData = json.decode(boxLocationResponse.body)
+                    as Map<String, dynamic>;
 
-                // Definisco il BOX associato al WO
-                material = carl.Material(
-                  id: materialData['data']['id'],
-                  code: materialData['data']['attributes']['code'],
-                  description:
-                      materialData['data']['attributes']['description'] ?? '',
-                  eqptType: materialData['data']['attributes']['eqptType'],
-                  statusCode: materialData['data']['attributes']['statusCode'],
+                // Definizione del BOX associato
+                boxLocation = Box(
+                  id: boxLocationdData['data']['id'],
+                  code: boxLocationdData['data']['attributes']['code'],
+                  description: boxLocationdData['data']['attributes']
+                          ['description'] ??
+                      '',
+                  eqptType: boxLocationdData['data']['attributes']['eqptType'],
+                  statusCode: boxLocationdData['data']['attributes']
+                      ['statusCode'],
                 );
               }
             }
 
-            // Inizializzo la lista di transizioni come lista vuota
-            List<WorkflowTransitions> listWorkflowTransitions = [];
-
-            // Per estrarre le transizioni di stato da ogni WO lancio una chiamata per ognuno
-            var workfloTransitionsUrl =
-                Uri.parse(wo['links']['workflow-transitions'].toString());
-            try {
-              var workfloTransitionResponse = await http.get(
-                workfloTransitionsUrl,
+            // Controllo box collegato direttamente al WO
+            if (woeqpt['attributes']['referEqpt'] == true) {
+              // Definizione url Material
+              var materialUrl = Uri.parse(woeqpt['relationships']['eqpt']
+                      ['links']['related']
+                  .toString());
+              // Creazione chiamata per estrazione Material
+              var materialResponse = await http.get(
+                materialUrl,
                 headers: headers,
               );
+              // Estrazione risultati
+              var materialData =
+                  json.decode(materialResponse.body) as Map<String, dynamic>;
 
-              var workfloTransitionData =
-                  json.decode(workfloTransitionResponse.body) as dynamic;
-
-              workfloTransitionData['data'].forEach(
-                (wt) {
-                  var workflowTransition = WorkflowTransitions(
-                    id: wt['id'],
-                    statusCode: wt['attributes']['nextStepCode'],
-                  );
-
-                  listWorkflowTransitions.add(workflowTransition);
-                },
+              // Definizione del Material associato
+              material = carl.Material(
+                id: materialData['data']['id'],
+                code: materialData['data']['attributes']['code'],
+                description:
+                    materialData['data']['attributes']['description'] ?? '',
+                eqptType: materialData['data']['attributes']['eqptType'],
+                statusCode: materialData['data']['attributes']['statusCode'],
               );
-            } catch (error) {
-              throw error;
             }
-
-            print(
-                'wo_code: ${wo['attributes']['code']}, actiontype_code: ${actionType.code}, box_code: ${boxLocation.code}');
-
-            loadedTasks.add(
-              Task(
-                id: wo['id'],
-                code: wo['attributes']['code'],
-                description: wo['attributes']['description'] ?? '',
-                statusCode: wo['attributes']['statusCode'],
-                actionType: actionType,
-                cliente: boxLocation,
-                commessa: material,
-                workflowTransitions: listWorkflowTransitions,
-              ),
-            );
-          } catch (error) {
-            throw error;
-          } finally {
-            // Ordino la lista in base al codice del WO
-            loadedTasks.sort((a, b) => a.code.compareTo(b.code));
-
-            // Aggiorno la lista di WO
-            _tasks = loadedTasks;
           }
-        },
-      );
 
-      notifyListeners();
+          // Inizializzo la lista di transizioni come lista vuota
+          List<WorkflowTransitions> listWorkflowTransitions = [];
+
+          // Definizione url worktransition
+          // var workfloTransitionsUrl =
+          //     Uri.parse(wo['links']['workflow-transitions'].toString());
+          // try {
+          //   // Creazione chiamata worktransition
+          //   var workfloTransitionResponse = await http.get(
+          //     workfloTransitionsUrl,
+          //     headers: headers,
+          //   );
+          //   // Estrazione risultati
+          //   var workfloTransitionData =
+          //       json.decode(workfloTransitionResponse.body) as dynamic;
+          //   // Iterazione per ogni risulato
+          //   workfloTransitionData['data'].forEach(
+          //     (wt) {
+          //       // Definizione worktransition
+          //       var workflowTransition = WorkflowTransitions(
+          //         id: wt['id'],
+          //         statusCode: wt['attributes']['nextStepCode'],
+          //       );
+          //       // Aggiunta transizioni alla lista workflowtransitions
+          //       listWorkflowTransitions.add(workflowTransition);
+          //     },
+          //   );
+          // } catch (error) {
+          //   throw error;
+          // }
+
+          print(
+              'wo_code: ${wo['attributes']['code']}, actiontype_code: ${actionType.code}, box_code: ${boxLocation.code}');
+
+          // Aggiunta Task alla lista
+          loadedTasks.add(
+            Task(
+              id: wo['id'],
+              code: wo['attributes']['code'],
+              description: wo['attributes']['description'] ?? '',
+              statusCode: wo['attributes']['statusCode'],
+              priority: wo['attributes']['workPriority'],
+              actionType: actionType,
+              cliente: boxLocation,
+              commessa: material,
+              dataInizio: DateTime.parse(wo['attributes']['WOBegin']),
+              dataFine: DateTime.parse(wo['attributes']['WOEnd']),
+              workflowTransitions: listWorkflowTransitions,
+            ),
+          );
+        } catch (error) {
+          throw error;
+        } finally {
+          // Orinamento lista in base al codice
+          loadedTasks.sort((a, b) => a.code.compareTo(b.code));
+        }
+      }
+      //   },
+      // );
     } catch (error) {
       print(error.toString());
       throw error;
-    } finally {}
+    } finally {
+      // Aggiornamento lista
+      _tasks = loadedTasks;
+      notifyListeners();
+    }
+
+    DateTime end = DateTime.now();
+    print(end.difference(init).inMilliseconds);
   }
 
   Future<void> addTask(Task task, {int index = 0}) async {

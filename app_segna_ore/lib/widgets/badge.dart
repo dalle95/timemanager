@@ -19,12 +19,12 @@ class Badge extends StatelessWidget {
       children: [
         child,
         Container(
-          margin: EdgeInsets.only(left: 10),
-          padding: EdgeInsets.all(2.0),
+          margin: const EdgeInsets.only(left: 10),
+          padding: const EdgeInsets.all(2.0),
           // color: Theme.of(context).accentColor,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(15.0),
-            color: color != null ? color : Theme.of(context).accentColor,
+            color: color ?? Theme.of(context).colorScheme.secondary,
           ),
           constraints: const BoxConstraints(
             minWidth: 20,

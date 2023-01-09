@@ -1,3 +1,5 @@
+import 'package:app_segna_ore/providers/materials.dart';
+import 'package:app_segna_ore/screens/list/material_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -56,6 +58,13 @@ class _MyAppState extends State<MyApp> {
             previousBoxes == null ? [] : previousBoxes.boxes,
           ),
         ),
+        ChangeNotifierProxyProvider<Auth, Materials>(
+          update: (ctx, auth, previousMaterials) => Materials(
+            auth.urlAmbiente,
+            auth.token,
+            previousMaterials == null ? [] : previousMaterials.materials,
+          ),
+        ),
         ChangeNotifierProxyProvider<Auth, WorkTimes>(
           update: (ctx, auth, previousWorkTimes) => WorkTimes(
             auth.urlAmbiente,
@@ -69,10 +78,24 @@ class _MyAppState extends State<MyApp> {
         builder: (ctx, auth, _) => MaterialApp(
           title: 'TimeManager',
           theme: ThemeData(
-            primarySwatch: Colors.blue,
-            accentColor: Colors.orange,
+            brightness: Brightness.light,
+            primaryColor: Colors.blue,
+            primaryColorDark: const Color.fromARGB(255, 11, 50, 113),
+            colorScheme: ColorScheme.fromSwatch().copyWith(
+              primary: Colors.blue,
+              secondary: Colors.orange,
+              background: Colors.white,
+            ),
+            backgroundColor: Colors.white,
             appBarTheme: const AppBarTheme(
               backgroundColor: Colors.black87,
+            ),
+            textTheme: const TextTheme(
+              headline1: TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold),
+              headline6: TextStyle(fontSize: 25, fontStyle: FontStyle.normal),
+              bodyText1: TextStyle(
+                  fontSize: 20.0, color: Colors.white, fontFamily: 'Hind'),
+              bodyText2: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
             ),
           ),
           home: auth.isAuth
@@ -92,6 +115,7 @@ class _MyAppState extends State<MyApp> {
             ActionTypeListScreen.routeName: (ctx) => ActionTypeListScreen(),
             BoxListScreen.routeName: (ctx) => BoxListScreen(),
             BoxDetailScreen.routeName: (ctx) => BoxDetailScreen(),
+            MaterialListScreen.routeName: (ctx) => MaterialListScreen(),
             WorkTimeListScreen.routeName: (ctx) => WorkTimeListScreen(),
             WorkTimeDetailScreen.routeName: (ctx) => WorkTimeDetailScreen(),
           },

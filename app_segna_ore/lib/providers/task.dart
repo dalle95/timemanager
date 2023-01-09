@@ -10,9 +10,14 @@ class Task with ChangeNotifier {
   String code;
   String description;
   String statusCode;
+  String priority;
   ActionType actionType;
   Box cliente;
   Material commessa;
+  DateTime dataInizio;
+  DateTime dataFine;
+  Duration stima;
+  String note;
   List<WorkflowTransitions> workflowTransitions;
 
   Task({
@@ -20,9 +25,14 @@ class Task with ChangeNotifier {
     @required this.code,
     @required this.description,
     @required this.statusCode,
+    @required this.priority,
     @required this.actionType,
     this.cliente,
     this.commessa,
+    this.dataInizio,
+    this.dataFine,
+    this.stima,
+    this.note,
     this.workflowTransitions,
   });
 }

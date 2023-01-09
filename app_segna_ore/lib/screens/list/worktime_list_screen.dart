@@ -1,29 +1,29 @@
-import 'package:app_segna_ore/screens/detail/worktime_detail.dart';
-import 'package:app_segna_ore/widgets/worktime_list.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/worktimes.dart';
-
-import '../detail/task_detail.dart';
-
+import '../../screens/detail/worktime_detail.dart';
+import '../../widgets/worktime_list.dart';
 import '../../widgets/loading_indicator.dart';
-import '../../widgets/badge.dart';
-import '../../widgets/task_list.dart';
 
 class WorkTimeListScreen extends StatelessWidget {
   static const routeName = '/worktime-list';
 
   @override
   Widget build(BuildContext context) {
-    Future<void> _refreshProducts(BuildContext context) async {
+    Future<void> _refresWorktimes(
+        BuildContext context, String periodoRiferimento) async {
       await Provider.of<WorkTimes>(context, listen: false)
-          .fetchAndSetWorkTimes();
+          .fetchAndSetWorkTimes(periodoRiferimento);
     }
 
     var functionData =
         ModalRoute.of(context).settings.arguments as Map<String, dynamic>;
     var function = functionData['function'];
+
+    final DateTime _mese = DateTime.now();
+    final String _periodoRiferimento = DateFormat("MM/yyyy").format(_mese);
 
     return Scaffold(
       appBar: AppBar(
@@ -33,6 +33,8 @@ class WorkTimeListScreen extends StatelessWidget {
         //           value: occupation.itemCount.toString(),
         //         ),
         //     child: const Text('')),
+        title: const Text('Ore caricate'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -43,10 +45,10 @@ class WorkTimeListScreen extends StatelessWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => _refreshProducts(context),
+        onRefresh: () => _refresWorktimes(context, _periodoRiferimento),
         child: FutureBuilder(
           future: Provider.of<WorkTimes>(context, listen: false)
-              .fetchAndSetWorkTimes(),
+              .fetchAndSetWorkTimes(_periodoRiferimento),
           builder: (ctx, dataSnapshot) {
             if (dataSnapshot.connectionState == ConnectionState.waiting) {
               return LoadingIndicator('In caricamento!');

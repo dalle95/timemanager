@@ -7,6 +7,7 @@ import '../providers/task.dart';
 class WorkTime with ChangeNotifier {
   String id;
   String code;
+  DateTime data;
   Task task;
   carl.Material commessa;
   Duration tempoLavorato;
@@ -22,16 +23,17 @@ class WorkTime with ChangeNotifier {
   WorkTime({
     @required this.id,
     @required this.code,
-    this.task,
+    @required this.data,
+    @required this.task,
     @required this.commessa,
     @required this.tempoLavorato,
     @required this.tempoFatturato,
     @required this.note,
-    this.addebitoTrasferta,
-    this.distanzaSede,
-    this.spesePasto,
-    this.speseNotte,
-    this.speseAltro,
-    this.comune,
+    @required this.addebitoTrasferta,
+    @required this.distanzaSede,
+    @required this.spesePasto,
+    @required this.speseNotte,
+    @required this.speseAltro,
+    @required this.comune,
   });
 }

@@ -3,15 +3,16 @@ import 'package:flutter/material.dart';
 class FlatButton extends StatelessWidget {
   final Function handler;
   final Widget child;
-  final Color primary;
+  final Color backgroundColor;
 
-  FlatButton(@required this.handler, @required this.child, [this.primary]);
+  FlatButton(@required this.handler, @required this.child,
+      [this.backgroundColor]);
 
   @override
   Widget build(BuildContext context) {
     final ButtonStyle flatButtonStyle = TextButton.styleFrom(
-      primary: Colors.black87,
-      backgroundColor: Colors.grey[300],
+      foregroundColor: Colors.black87,
+      backgroundColor: backgroundColor ?? Colors.grey[300],
       minimumSize: Size(88, 36),
       padding: EdgeInsets.symmetric(horizontal: 16.0),
       shape: const RoundedRectangleBorder(
