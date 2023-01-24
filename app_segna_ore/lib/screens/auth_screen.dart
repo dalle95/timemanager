@@ -42,38 +42,38 @@ class AuthScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  Flexible(
-                    child: Container(
-                      width: deviceSize.width * 0.75,
-                      margin: const EdgeInsets.all(10.0),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8.0, horizontal: 50.0),
-                      // transform: Matrix4.rotationZ(-8 * pi / 180)
-                      //   ..translate(-10.0),
-                      // ..translate(-10.0),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Theme.of(context).colorScheme.secondary,
-                        boxShadow: const [
-                          BoxShadow(
-                            blurRadius: 8,
-                            color: Colors.black26,
-                            offset: Offset(0, 2),
-                          )
-                        ],
-                      ),
-                      child: const Text(
-                        'Time Manager',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 25,
-                          //fontFamily: 'Anton',
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Flexible(
+                  //   child: Container(
+                  //     width: deviceSize.width * 0.75,
+                  //     margin: const EdgeInsets.all(10.0),
+                  //     padding: const EdgeInsets.symmetric(
+                  //         vertical: 8.0, horizontal: 50.0),
+                  //     // transform: Matrix4.rotationZ(-8 * pi / 180)
+                  //     //   ..translate(-10.0),
+                  //     // ..translate(-10.0),
+                  //     decoration: BoxDecoration(
+                  //       borderRadius: BorderRadius.circular(10),
+                  //       color: Theme.of(context).colorScheme.secondary,
+                  //       boxShadow: const [
+                  //         BoxShadow(
+                  //           blurRadius: 8,
+                  //           color: Colors.black26,
+                  //           offset: Offset(0, 2),
+                  //         )
+                  //       ],
+                  //     ),
+                  //     child: const Text(
+                  //       'Time Manager',
+                  //       textAlign: TextAlign.center,
+                  //       style: TextStyle(
+                  //         color: Colors.white,
+                  //         fontSize: 25,
+                  //         //fontFamily: 'Anton',
+                  //         fontWeight: FontWeight.bold,
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                   Flexible(
                     flex: deviceSize.width > 600 ? 2 : 1,
                     child: const AuthCard(),
@@ -99,6 +99,7 @@ class AuthCard extends StatefulWidget {
 
 class _AuthCardState extends State<AuthCard> {
   final GlobalKey<FormState> _formKey = GlobalKey();
+
   //AuthMode _authMode = AuthMode.Login;
   final Map<String, String> _authData = {
     'url': 'https://carl6.operosa.it/gmaoCS02',
@@ -166,7 +167,7 @@ class _AuthCardState extends State<AuthCard> {
       ),
       elevation: 8.0,
       child: Container(
-        height: 260,
+        height: 330,
         constraints: const BoxConstraints(minHeight: 230),
         width: deviceSize.width * 0.75,
         padding: const EdgeInsets.all(16.0),
@@ -175,8 +176,16 @@ class _AuthCardState extends State<AuthCard> {
           child: SingleChildScrollView(
             child: Column(
               children: <Widget>[
+                const Text(
+                  'TimeManager',
+                  style: TextStyle(
+                    fontSize: 30,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 15),
                 TextFormField(
-                  initialValue: 'https://carl6.operosa.it/gmaoCS02',
+                  initialValue: 'https://ticketing.in-am.it/gmaoCS02',
                   decoration: const InputDecoration(
                       labelText: 'URL ambiente',
                       contentPadding: EdgeInsets.zero),
@@ -235,7 +244,12 @@ class _AuthCardState extends State<AuthCard> {
                 else
                   RaiseButton(
                     _submit,
-                    const Text('Connessione'),
+                    const Text(
+                      'Connessione',
+                      style: TextStyle(
+                        fontSize: 20,
+                      ),
+                    ),
                     Theme.of(context).colorScheme.secondary,
                   ),
               ],

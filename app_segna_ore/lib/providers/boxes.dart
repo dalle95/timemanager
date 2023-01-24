@@ -35,7 +35,7 @@ class Boxes with ChangeNotifier {
   // Funzione per estrarre le nature tramite richiesta get
   Future<void> fetchAndSetBoxes() async {
     final url =
-        Uri.parse('$urlAmbiente/api/entities/v1/box?filter[code][LIKE]=TEST');
+        Uri.parse('$urlAmbiente/api/entities/v1/box?filter[eqptType]=CLIENTE');
 
     try {
       var response = await http.get(
@@ -45,6 +45,7 @@ class Boxes with ChangeNotifier {
         },
       );
       var extractedData = json.decode(response.body) as Map<String, dynamic>;
+
       final List<Box> loadedBoxes = [];
 
       if (extractedData['data'] == null) {

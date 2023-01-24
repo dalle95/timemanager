@@ -33,9 +33,11 @@ class Materials with ChangeNotifier {
   }
 
   // Funzione per estrarre le nature tramite richiesta get
-  Future<void> fetchAndSetMaterials() async {
+  Future<void> fetchAndSetMaterials([String cliente]) async {
     final url = Uri.parse(
-      '$urlAmbiente/api/entities/v1/material?fields=code,description,statusCode,eqptType',
+      cliente != null
+          ? '$urlAmbiente/api/entities/v1/material?filter[eqptType]=COMMESSA&filter[code][LIKE]=$cliente'
+          : '$urlAmbiente/api/entities/v1/material?filter[eqptType]=COMMESSA',
     );
 
     try {
@@ -54,15 +56,18 @@ class Materials with ChangeNotifier {
 
       extractedData['data'].forEach(
         (material) {
-          loadedMaterials.add(
-            Material(
-              id: material['id'],
-              code: material['attributes']['code'],
-              description: material['attributes']['description'],
-              eqptType: material['attributes']['eqptType'],
-              statusCode: material['attributes']['statusCode'],
-            ),
-          );
+          if (material['attributes']['statusCode'] == 'ATTESA_ORDINE' ||
+              material['attributes']['statusCode'] == 'APERTA') {
+            loadedMaterials.add(
+              Material(
+                id: material['id'],
+                code: material['attributes']['code'],
+                description: material['attributes']['description'],
+                eqptType: material['attributes']['eqptType'],
+                statusCode: material['attributes']['statusCode'],
+              ),
+            );
+          }
         },
       );
       // Ordino la lista in base al codice del Material

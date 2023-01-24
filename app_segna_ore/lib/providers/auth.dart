@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:app_segna_ore/providers/actor.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
@@ -52,6 +53,7 @@ class Auth with ChangeNotifier {
       }
 
       print(json.decode(response.body));
+
       var responseData = json.decode(response.body);
 
       _urlAmbiente = urlAmbiente;
@@ -80,6 +82,8 @@ class Auth with ChangeNotifier {
         responseData = json.decode(response.body);
         _userId = responseData['data']['id'];
         _actorName = responseData['data']['attributes']['fullName'];
+
+        Actor attore = Actor(id: _userId, code: username, nome: _actorName);
 
         print(_actorName);
       } catch (error) {

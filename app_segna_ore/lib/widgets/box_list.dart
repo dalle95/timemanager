@@ -18,7 +18,7 @@ class BoxList extends StatelessWidget {
     return boxes.isEmpty
         ? const Center(
             child: Text(
-              'Non sono presenti WO.',
+              'Non sono presenti clienti.',
               style: TextStyle(
                 fontSize: 20,
               ),

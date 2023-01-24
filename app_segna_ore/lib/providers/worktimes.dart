@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ffi';
 import 'package:app_segna_ore/providers/actiontype.dart';
 import 'package:app_segna_ore/providers/box.dart';
 import 'package:app_segna_ore/providers/task.dart';
@@ -77,7 +76,7 @@ class WorkTimes with ChangeNotifier {
     // Definizione del link della chiamata
     var url = Uri.parse(
       periodoRiferimento == null
-          ? '$urlAmbiente/api/entities/v1/wo?fields=code,description,statusCode,WOBegin,WOEnd,workPriority,time01,time02,actionType,createdBy,equipments&include=actionType,createdBy,equipments&filter[wo][actionType.code]=TEST_SCRIPT&filter[wo][createdBy.id]=$userId'
+          ? '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note,&include=technician,commessa,WO&filter[technician.id]=$userId'
           : '$urlAmbiente/api/entities/v1/wo?fields=code,description,statusCode,WOBegin,WOEnd,workPriority,time01,time02,actionType,createdBy,equipments&include=actionType,createdBy,equipments&filter[wo][actionType.code]=TEST_SCRIPT&filter[wo][createdBy.id]=$userId&filter[xtraTxt01]=$periodoRiferimento',
     );
 
@@ -97,36 +96,8 @@ class WorkTimes with ChangeNotifier {
       }
 
       // Iterazione per ogni risultato
-      // extractedData['data'].forEach(
-      //   (wo) async {
-      for (var wo in extractedData['data']) {
-        // Inizializzazione natura nulla
-        var actionType = ActionType(
-          id: null,
-          code: null,
-          description: null,
-        );
-        // Per estrarre la natura controllo l'uguaglianza dell'ID con quello nell'include
-        for (var actiontype in extractedData['included']) {
-          if (actiontype['id'] ==
-              wo['relationships']['actionType']['data']['id']) {
-            // Inizializzazione natura
-            actionType = ActionType(
-              id: actiontype['id'],
-              code: actiontype['attributes']['code'],
-              description: actiontype['attributes']['description'],
-            );
-          }
-        }
-
-        // Inizializzo il BOX  e material nullo
-        var boxLocation = Box(
-          id: null,
-          code: '',
-          description: '',
-          eqptType: '',
-          statusCode: '',
-        );
+      for (var occupation in extractedData['data']) {
+        // Definisco il materiale nullo
         var material = carl.Material(
           id: null,
           code: '',
@@ -135,104 +106,64 @@ class WorkTimes with ChangeNotifier {
           statusCode: '',
         );
 
-        // Recupero del Box associato al WO
-        for (var woeqpt in extractedData['included']) {
-          // Controllo che il box sia collegato direttamente al WO
-          if (woeqpt['attributes']['directEqpt'] == true ||
-              woeqpt['attributes']['referEqpt'] == true) {
-            if (woeqpt['attributes']['directEqpt'] == true &&
-                woeqpt['attributes']['referEqpt'] == false) {
-              // Definizione url per equipment
-              var boxLocationUrl = Uri.parse(woeqpt['relationships']['eqpt']
-                      ['links']['related']
-                  .toString());
-              // Creazione chiamata per estrazione box
-              var boxLocationResponse = await http.get(
-                boxLocationUrl,
-                headers: headers,
-              );
-              // Estrazione risultati
-              var boxLocationdData =
-                  json.decode(boxLocationResponse.body) as Map<String, dynamic>;
+        // Definisco il WO nullo
+        var task = Task(
+          id: null,
+          code: '',
+          description: '',
+          statusCode: '',
+          actionType: ActionType(
+            id: null,
+            code: '',
+            description: '',
+          ),
+          cliente: Box(
+            id: null,
+            code: '',
+            description: '',
+            eqptType: '',
+            statusCode: '',
+          ),
+          commessa: carl.Material(
+            id: null,
+            code: '',
+            description: '',
+            eqptType: '',
+            statusCode: '',
+          ),
+          stima: const Duration(
+            hours: 0,
+            minutes: 0,
+          ),
+          dataInizio: DateTime.now(),
+          dataFine: DateTime.now(),
+          note: '',
+          workflowTransitions: [],
+        );
 
-              // Definizione del BOX associato
-              boxLocation = Box(
-                id: boxLocationdData['data']['id'],
-                code: boxLocationdData['data']['attributes']['code'],
-                description:
-                    boxLocationdData['data']['attributes']['description'] ?? '',
-                eqptType: boxLocationdData['data']['attributes']['eqptType'],
-                statusCode: boxLocationdData['data']['attributes']
-                    ['statusCode'],
-              );
-            }
-          }
+        // Recupero del materiale associato alla occupazione
+        for (var record in extractedData['included']) {
           // Controllo il material collegato
-          if (woeqpt['attributes']['referEqpt'] == true) {
-            // Definizione url material
-            var materialUrl = Uri.parse(
-                woeqpt['relationships']['eqpt']['links']['related'].toString());
-            // Creazione chiamata material
-            var materialResponse = await http.get(
-              materialUrl,
-              headers: headers,
-            );
-            // Estrazione risultati
-            var materialData =
-                json.decode(materialResponse.body) as Map<String, dynamic>;
-
+          if (record['id'] ==
+              occupation['relationships']['commessa']['data']['id']) {
             // Definizione Material associato
             material = carl.Material(
-              id: materialData['data']['id'],
-              code: materialData['data']['attributes']['code'],
-              description:
-                  materialData['data']['attributes']['description'] ?? '',
-              eqptType: materialData['data']['attributes']['eqptType'],
-              statusCode: materialData['data']['attributes']['statusCode'],
+              id: record['id'],
+              code: record['attributes']['code'],
+              description: record['attributes']['description'] ?? '',
+              eqptType: record['attributes']['eqptType'],
+              statusCode: record['attributes']['statusCode'],
             );
           }
-        }
 
-        // Inizializzazione lista di transizioni come lista vuota
-        List<WorkflowTransitions> listWorkflowTransitions = [];
-
-        // Per estrarre le transizioni di stato da ogni WO lancio una chiamata per ognuno
-        // var workfloTransitionsUrl =
-        //     Uri.parse(wo['links']['workflow-transitions'].toString());
-
-        // var workfloTransitionResponse = await http.get(
-        //   workfloTransitionsUrl,
-        //   headers: headers,
-        // );
-
-        // var workfloTransitionData =
-        //     json.decode(workfloTransitionResponse.body) as dynamic;
-
-        // workfloTransitionData['data'].forEach(
-        //   (wt) {
-        //     var workflowTransition = WorkflowTransitions(
-        //       id: wt['id'],
-        //       statusCode: wt['attributes']['nextStepCode'],
-        //     );
-
-        //     listWorkflowTransitions.add(workflowTransition);
-        //   },
-        // );
-
-        print(
-            'wo_code: ${wo['attributes']['code']}, actiontype_code: ${actionType.code}, box_code: ${boxLocation.code}');
-
-        // Aggiunta WorkTime alla lista
-        loadedWorkTimes.add(
-          WorkTime(
-            id: wo['id'],
-            code: wo['attributes']['code'],
-            note: wo['attributes']['description'] ?? '',
-            task: Task(
-              id: null,
-              code: '',
-              description: '',
-              statusCode: '',
+          // Controllo il WO collegato
+          if (record['id'] == occupation['relationships']['WO']['data']['id']) {
+            // Definisco il WO associato
+            task = Task(
+              id: record['id'],
+              code: record['attributes']['code'],
+              description: record['attributes']['description'],
+              statusCode: record['attributes']['statusCode'],
               actionType: ActionType(
                 id: null,
                 code: '',
@@ -256,23 +187,35 @@ class WorkTimes with ChangeNotifier {
                 hours: 0,
                 minutes: 0,
               ),
-              dataInizio: DateTime.now(),
-              dataFine: DateTime.now(),
-              note: '',
+              dataInizio: record['attributes']['WOBegin'],
+              dataFine: record['attributes']['WOEnd'],
+              note: record['attributes']['xtraTxt10'],
               workflowTransitions: [],
-            ),
-            data: DateTime.parse(wo['attributes']['WOBegin']),
-            tempoLavorato: parseDuration(wo['attributes']['time01']) ??
-                const Duration(
-                  hours: 0,
-                  minutes: 0,
-                ),
-            tempoFatturato: parseDuration(wo['attributes']['time02']) ??
-                const Duration(
-                  hours: 0,
-                  minutes: 0,
-                ),
+            );
+          }
+        }
+
+        print('data: ${occupation['attributes']['occupationDate']}ù');
+
+        // Aggiunta WorkTime alla lista
+        loadedWorkTimes.add(
+          WorkTime(
+            id: occupation['id'],
+            note: occupation['attributes']['note'] ?? '',
+            data: DateTime.parse(occupation['attributes']['occupationDate']),
+            tempoLavorato:
+                parseDuration(occupation['attributes']['duration']) ??
+                    const Duration(
+                      hours: 0,
+                      minutes: 0,
+                    ),
+            // tempoFatturato: parseDuration(occupation['attributes']['time02']) ??
+            //     const Duration(
+            //       hours: 0,
+            //       minutes: 0,
+            //     ),
             commessa: material,
+            task: task,
           ),
         );
 

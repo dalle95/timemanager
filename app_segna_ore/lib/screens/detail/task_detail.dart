@@ -57,7 +57,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     id: null,
     code: '',
     description: '',
-    statusCode: '',
+    statusCode: 'PREPARAZIONE',
     actionType: ActionType(
       id: null,
       code: '',
@@ -90,7 +90,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     id: null,
     code: '',
     description: '',
-    statusCode: '',
+    statusCode: 'PREPARAZIONE',
     actionType: ActionType(
       id: null,
       code: '',
@@ -147,8 +147,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           workflowTransitions: _editedTask.workflowTransitions,
         );
 
-        print(_initTask.cliente.id);
-
         _actionType = _editedTask.actionType;
         _cliente = _editedTask.cliente;
         _commessa = _editedTask.commessa;
@@ -199,6 +197,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       MaterialListScreen.routeName,
       arguments: {
         'function': 'search',
+        'cliente': _cliente.code,
       },
     ) as Map<String, dynamic>;
 
@@ -247,7 +246,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       confirmText: 'Conferma',
       confirmTextStyle: TextStyle(
         inherit: false,
-        color: Theme.of(context).accentColor,
+        color: Theme.of(context).colorScheme.secondary,
         fontSize: 22,
       ),
       cancelText: 'Annulla',
@@ -262,7 +261,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         textAlign: TextAlign.center,
       ),
       selectedTextStyle: TextStyle(
-        color: Theme.of(context).accentColor,
+        color: Theme.of(context).colorScheme.secondary,
       ),
       onConfirm: (Picker picker, List<int> value) {
         setState(() {
@@ -362,6 +361,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     _editedTask.actionType = _actionType;
     _editedTask.cliente = _cliente;
     _editedTask.cliente = _cliente;
+    _editedTask.dataInizio = _initTask.dataInizio;
+    _editedTask.dataFine = _initTask.dataFine;
+    _editedTask.stima = _initTask.stima;
 
     print(
         'WO: id: ${_editedTask.id}, code: ${_editedTask.code ?? ''}, description: ${_editedTask.description ?? ''}, natura: ${_editedTask.actionType.code ?? ''}, box: ${_editedTask.cliente.code ?? ''}');
@@ -436,10 +438,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         title: const Text('Dettaglio del WO'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
+          _initTask.id != null
+              ? IconButton(
+                  onPressed: _saveForm,
+                  icon: const Icon(Icons.alarm_add),
+                )
+              : const SizedBox(),
           IconButton(
             onPressed: _saveForm,
             icon: const Icon(Icons.save),
-          )
+          ),
         ],
       ),
       body: Padding(
@@ -465,6 +473,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 initialValue: _initTask.code ?? '',
                 decoration: const InputDecoration(labelText: 'Codice'),
                 textInputAction: TextInputAction.next,
+                onChanged: (value) {
+                  setState(() {
+                    _initTask.code = value;
+                  });
+                },
                 onSaved: (value) {
                   _editedTask = Task(
                     id: _editedTask.id,
@@ -472,6 +485,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     description: _editedTask.description,
                     statusCode: _editedTask.statusCode,
                     actionType: _editedTask.actionType,
+                    priority: _editedTask.priority,
                     cliente: _cliente,
                     commessa: _commessa,
                     stima: _editedTask.stima,
@@ -488,7 +502,15 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               TextFormField(
                 initialValue: _initTask.description ?? '',
                 decoration: const InputDecoration(labelText: 'Titolo'),
+                minLines: 2,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
                 textInputAction: TextInputAction.next,
+                onChanged: (value) {
+                  setState(() {
+                    _initTask.description = value;
+                  });
+                },
                 onSaved: (value) {
                   _editedTask = Task(
                     id: _editedTask.id,
@@ -496,6 +518,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     description: value,
                     statusCode: _editedTask.statusCode,
                     actionType: _editedTask.actionType,
+                    priority: _editedTask.priority,
                     cliente: _cliente,
                     commessa: _commessa,
                     stima: _editedTask.stima,
@@ -515,7 +538,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   labelText: 'Stato',
                 ),
                 textAlign: TextAlign.center,
-                readOnly: _initTask.id == null ? false : true,
+                readOnly: true,
                 textInputAction: TextInputAction.next,
                 onSaved: (value) {
                   _editedTask = Task(
@@ -524,6 +547,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     description: _editedTask.description,
                     statusCode: value,
                     actionType: _editedTask.actionType,
+                    priority: _editedTask.priority,
                     cliente: _cliente,
                     commessa: _commessa,
                     stima: _editedTask.stima,
@@ -551,6 +575,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 textAlign: TextAlign.center,
                 readOnly: _initTask.id == null ? false : true,
                 textInputAction: TextInputAction.next,
+                onChanged: (value) {
+                  setState(() {
+                    _initTask.priority = value;
+                  });
+                },
                 onSaved: (value) {
                   _editedTask = Task(
                     id: _editedTask.id,
@@ -590,7 +619,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: FlatButton(
                   _searchListActiontype,
-                  Text(_actionType.code),
+                  Text(_actionType.description),
                 ),
               ),
               TextFormField(
@@ -600,13 +629,19 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 minLines: 6,
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
+                onChanged: (value) {
+                  setState(() {
+                    _initTask.note = value;
+                  });
+                },
                 onSaved: (value) {
                   _editedTask = Task(
                     id: _editedTask.id,
                     code: _editedTask.code,
                     description: _editedTask.description,
-                    statusCode: value,
+                    statusCode: _editedTask.statusCode,
                     actionType: _editedTask.actionType,
+                    priority: _editedTask.priority,
                     cliente: _cliente,
                     commessa: _commessa,
                     stima: _editedTask.stima,
@@ -618,12 +653,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 },
                 onFieldSubmitted: (_) {
                   _saveForm();
-                },
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Inserisci delle note.';
-                  }
-                  return null;
                 },
               ),
               const SizedBox(height: 10),
@@ -652,7 +681,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: FlatButton(
                   _searchListBox,
-                  Text(_cliente.code ?? ''),
+                  Text(_cliente.description ?? ''),
                 ),
               ),
               const SizedBox(height: 10),
@@ -667,7 +696,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: FlatButton(
                   _searchListMaterial,
-                  Text(_commessa.code),
+                  Text(_commessa.description),
                 ),
               ),
               const SizedBox(height: 10),

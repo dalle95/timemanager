@@ -12,14 +12,15 @@ class MaterialListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Future<void> _refreshMaterials(BuildContext context) async {
+    Future<void> _refreshMaterials(BuildContext context, String cliente) async {
       await Provider.of<Materials>(context, listen: false)
-          .fetchAndSetMaterials();
+          .fetchAndSetMaterials(cliente);
     }
 
-    var functionData =
+    var arguments =
         ModalRoute.of(context).settings.arguments as Map<String, dynamic>;
-    var function = functionData['function'];
+    var function = arguments['function'];
+    var cliente = arguments['cliente'];
 
     return Scaffold(
       appBar: AppBar(
@@ -41,10 +42,10 @@ class MaterialListScreen extends StatelessWidget {
       ),
       drawer: function == 'list' ? MainDrawer() : null,
       body: RefreshIndicator(
-        onRefresh: () => _refreshMaterials(context),
+        onRefresh: () => _refreshMaterials(context, cliente),
         child: FutureBuilder(
           future: Provider.of<Materials>(context, listen: false)
-              .fetchAndSetMaterials(),
+              .fetchAndSetMaterials(cliente),
           builder: (ctx, dataSnapshot) {
             if (dataSnapshot.connectionState == ConnectionState.waiting) {
               return LoadingIndicator('In caricamento!');

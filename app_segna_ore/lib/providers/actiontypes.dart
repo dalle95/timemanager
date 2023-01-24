@@ -34,7 +34,8 @@ class ActionTypes with ChangeNotifier {
 
   // Funzione per estrarre le nature tramite richiesta get
   Future<void> fetchAndSetActiontypes() async {
-    final url = Uri.parse('$urlAmbiente/api/entities/v1/actiontype');
+    final url = Uri.parse(
+        '$urlAmbiente/api/entities/v1/actiontype?filter[actionGroup]=PREV');
 
     try {
       var response = await http.get(

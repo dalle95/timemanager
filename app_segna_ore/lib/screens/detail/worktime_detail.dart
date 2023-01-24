@@ -56,7 +56,6 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
   // Inizializzo il valore iniziale del ticket ore sia nuovo che in modifica
   var _initWorkTime = WorkTime(
     id: null,
-    code: '',
     data: DateTime.now(),
     task: Task(
       id: null,
@@ -85,16 +84,9 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
       minutes: 0,
     ),
     note: '',
-    addebitoTrasferta: null,
-    distanzaSede: null,
-    spesePasto: null,
-    speseNotte: null,
-    speseAltro: null,
-    comune: null,
   );
   var _editedWorkTime = WorkTime(
     id: null,
-    code: '',
     data: DateTime.now(),
     task: Task(
       id: null,
@@ -123,12 +115,6 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
       minutes: 0,
     ),
     note: '',
-    addebitoTrasferta: null,
-    distanzaSede: null,
-    spesePasto: null,
-    speseNotte: null,
-    speseAltro: null,
-    comune: null,
   );
 
   @override
@@ -141,19 +127,12 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
 
         _initWorkTime = WorkTime(
           id: _editedWorkTime.id,
-          code: _editedWorkTime.code,
           data: _editedWorkTime.data,
           task: _editedWorkTime.task,
           commessa: _editedWorkTime.commessa,
           tempoLavorato: _editedWorkTime.tempoLavorato,
           tempoFatturato: _editedWorkTime.tempoFatturato,
           note: _editedWorkTime.note,
-          addebitoTrasferta: _editedWorkTime.addebitoTrasferta,
-          distanzaSede: _editedWorkTime.distanzaSede,
-          spesePasto: _editedWorkTime.spesePasto,
-          speseNotte: _editedWorkTime.speseNotte,
-          speseAltro: _editedWorkTime.speseAltro,
-          comune: _editedWorkTime.comune,
         );
 
         _task = _editedWorkTime.task;
