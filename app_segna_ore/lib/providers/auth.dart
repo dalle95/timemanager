@@ -70,7 +70,7 @@ class Auth with ChangeNotifier {
           },
         );
         responseData = json.decode(response.body);
-        print(responseData);
+        //print(responseData);
 
         var url_actor = Uri.parse(responseData['data'][0]['relationships']
             ['actor']['links']['related']);
@@ -104,8 +104,6 @@ class Auth with ChangeNotifier {
           tecnicoID: technicianID,
         );
 
-        print(actorID);
-        print(_user.nome);
         notifyListeners();
       } catch (error) {
         print(error);
@@ -122,10 +120,17 @@ class Auth with ChangeNotifier {
         {
           'url': _urlAmbiente,
           'token': _token,
-          'user': _user,
+          'user': {
+            'id': _user.id,
+            'code': _user.code,
+            'nome': _user.nome,
+            'tecnicoID': _user.tecnicoID,
+          },
           'expiryDate': _expiryDate.toIso8601String(),
         },
       );
+      print(userData);
+
       prefs.setString('userData', userData);
     } catch (error) {
       throw error;
@@ -151,7 +156,14 @@ class Auth with ChangeNotifier {
     }
     _urlAmbiente = extractedUserData['url'];
     _token = extractedUserData['token'];
-    _user = extractedUserData['user'];
+    Map utente = extractedUserData['user'];
+    _user = Actor(
+      id: utente['id'],
+      code: utente['code'],
+      nome: utente['nome'],
+      tecnicoID: utente['tecnicoID'],
+    );
+
     _expiryDate = expiryDate;
     notifyListeners();
     _autoLogout();
