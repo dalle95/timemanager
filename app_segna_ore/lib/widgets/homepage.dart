@@ -1,3 +1,4 @@
+import 'package:app_segna_ore/screens/detail/task_detail.dart';
 import 'package:flutter/material.dart';
 
 import '../screens/list/task_list_screen.dart';
@@ -26,7 +27,7 @@ class Homepage extends StatelessWidget {
         Center(
           child: Container(
             alignment: Alignment.center,
-            height: 400,
+            height: 430,
             width: 320,
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.only(
@@ -74,7 +75,29 @@ class Homepage extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 50),
+            const SizedBox(height: 30),
+            Container(
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: 250,
+                child: RaiseButton(
+                  () {
+                    Navigator.of(context).pushNamed(
+                      TaskDetailScreen.routeName,
+                    );
+                  },
+                  const Padding(
+                    padding: EdgeInsets.all(10.0),
+                    child: Text(
+                      'Crea ticket',
+                      style: TextStyle(fontSize: 25),
+                    ),
+                  ),
+                  Theme.of(context).colorScheme.secondary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 30),
             Container(
               alignment: Alignment.center,
               child: SizedBox(
@@ -89,7 +112,7 @@ class Homepage extends StatelessWidget {
                   const Padding(
                     padding: EdgeInsets.all(10.0),
                     child: Text(
-                      'Task assegnati',
+                      'Ticket assegnati',
                       style: TextStyle(fontSize: 25),
                     ),
                   ),
@@ -97,7 +120,7 @@ class Homepage extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 50),
+            const SizedBox(height: 30),
             Container(
               alignment: Alignment.center,
               child: SizedBox(

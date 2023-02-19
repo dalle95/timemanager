@@ -10,8 +10,7 @@ import '../models/http_exception.dart';
 class Auth with ChangeNotifier {
   String _urlAmbiente;
   String _token;
-  String _userId;
-  String _actorName;
+  Actor _user;
 
   DateTime _expiryDate;
   Timer _authTimer;
@@ -24,12 +23,8 @@ class Auth with ChangeNotifier {
     return _urlAmbiente;
   }
 
-  String get userId {
-    return _userId;
-  }
-
-  String get actorName {
-    return _actorName;
+  Actor get user {
+    return _user;
   }
 
   String get token {
@@ -42,13 +37,16 @@ class Auth with ChangeNotifier {
   }
 
   Future<void> _authenticate(
-      String urlAmbiente, String username, String password) async {
+    String urlAmbiente,
+    String username,
+    String password,
+  ) async {
     var url = Uri.parse(
         '$urlAmbiente/api/auth/v1/authenticate?login=$username&password=$password&origin=Postman_SCA'); // Per eseguire l'autenticazione
     try {
       var response = await http.post(url);
 
-      if (response.statusCode.toString() == '401') {
+      if (response.statusCode >= 400) {
         throw HttpException('Le credenziali non sono valide');
       }
 
@@ -58,7 +56,9 @@ class Auth with ChangeNotifier {
 
       _urlAmbiente = urlAmbiente;
       _token = responseData['X-CS-Access-Token'];
-      _expiryDate = DateTime.now().add(Duration(seconds: 604800));
+      _expiryDate = DateTime.now().add(
+        const Duration(seconds: 604800),
+      );
 
       try {
         url = Uri.parse(
@@ -70,6 +70,7 @@ class Auth with ChangeNotifier {
           },
         );
         responseData = json.decode(response.body);
+        print(responseData);
 
         var url_actor = Uri.parse(responseData['data'][0]['relationships']
             ['actor']['links']['related']);
@@ -80,29 +81,48 @@ class Auth with ChangeNotifier {
           },
         );
         responseData = json.decode(response.body);
-        _userId = responseData['data']['id'];
-        _actorName = responseData['data']['attributes']['fullName'];
 
-        Actor attore = Actor(id: _userId, code: username, nome: _actorName);
+        var actorID = responseData['data']['id'];
+        var actorNome = responseData['data']['attributes']['fullName'];
 
-        print(_actorName);
+        var url_technician = Uri.parse(
+            '$urlAmbiente/api/entities/v1/technician?filter[code]=$username');
+        response = await http.get(
+          url_technician,
+          headers: {
+            "X-CS-Access-Token": _token,
+          },
+        );
+        responseData = json.decode(response.body);
+
+        var technicianID = responseData['data'][0]['id'];
+
+        _user = Actor(
+          id: actorID,
+          code: username,
+          nome: actorNome,
+          tecnicoID: technicianID,
+        );
+
+        print(actorID);
+        print(_user.nome);
+        notifyListeners();
       } catch (error) {
         print(error);
         throw error;
       }
-
       notifyListeners();
       _autoLogout();
 
       print(
-          'Autenticazione: Token: $_token, ActorID: $_userId, AmbienteUrl: $_urlAmbiente, Data scadenza: ${_expiryDate.toString()}');
+          'Autenticazione: Token: $_token, ActorID: ${_user.id}, ActorCode: ${_user.code}, AmbienteUrl: $_urlAmbiente, Data scadenza: ${_expiryDate.toString()}');
 
       final prefs = await SharedPreferences.getInstance();
       final userData = json.encode(
         {
           'url': _urlAmbiente,
           'token': _token,
-          'userId': _userId,
+          'user': _user,
           'expiryDate': _expiryDate.toIso8601String(),
         },
       );
@@ -131,7 +151,7 @@ class Auth with ChangeNotifier {
     }
     _urlAmbiente = extractedUserData['url'];
     _token = extractedUserData['token'];
-    _userId = extractedUserData['userId'];
+    _user = extractedUserData['user'];
     _expiryDate = expiryDate;
     notifyListeners();
     _autoLogout();
@@ -141,7 +161,11 @@ class Auth with ChangeNotifier {
   void logoout() async {
     _urlAmbiente = null;
     _token = null;
-    _userId = null;
+    _user = Actor(
+      id: null,
+      code: '',
+      nome: '',
+    );
     _expiryDate = null;
     if (_authTimer != null) {
       _authTimer.cancel();
@@ -152,7 +176,7 @@ class Auth with ChangeNotifier {
       {
         'url': null,
         'token': null,
-        'userId': null,
+        'user': null,
         'expiryDate': null,
       },
     );

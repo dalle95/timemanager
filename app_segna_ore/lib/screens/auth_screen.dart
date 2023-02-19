@@ -26,7 +26,7 @@ class AuthScreen extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   Theme.of(context).primaryColor,
-                  Color.fromARGB(255, 11, 50, 113),
+                  const Color.fromARGB(255, 11, 50, 113),
                 ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -102,7 +102,7 @@ class _AuthCardState extends State<AuthCard> {
 
   //AuthMode _authMode = AuthMode.Login;
   final Map<String, String> _authData = {
-    'url': 'https://carl6.operosa.it/gmaoCS02',
+    'url': 'https://ticketing.in-am.it/gmaoCS02',
     'username': '',
     'password': '',
   };
@@ -133,6 +133,7 @@ class _AuthCardState extends State<AuthCard> {
       return;
     }
     _formKey.currentState.save();
+
     setState(() {
       _isLoading = true;
     });
@@ -140,7 +141,7 @@ class _AuthCardState extends State<AuthCard> {
     try {
       // Log user in
       await Provider.of<Auth>(context, listen: false).login(
-        _authData['url'],
+        'https://ticketing.in-am.it/gmaoCS02',
         _authData['username'],
         _authData['password'],
       );
@@ -167,92 +168,95 @@ class _AuthCardState extends State<AuthCard> {
       ),
       elevation: 8.0,
       child: Container(
-        height: 330,
+        height: 300,
         constraints: const BoxConstraints(minHeight: 230),
         width: deviceSize.width * 0.75,
         padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                const Text(
-                  'TimeManager',
-                  style: TextStyle(
-                    fontSize: 30,
-                    color: Colors.blue,
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextFormField(
-                  initialValue: 'https://ticketing.in-am.it/gmaoCS02',
-                  decoration: const InputDecoration(
-                      labelText: 'URL ambiente',
-                      contentPadding: EdgeInsets.zero),
-                  keyboardType: TextInputType.name,
-                  textAlign: TextAlign.center,
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'URL invalido!';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) {
-                    _authData['url'] = value;
-                  },
-                ),
-                TextFormField(
-                  decoration: const InputDecoration(
-                      labelText: 'Login', contentPadding: EdgeInsets.zero),
-                  keyboardType: TextInputType.name,
-                  textAlign: TextAlign.center,
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'Nome invalido!';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) {
-                    _authData['username'] = value;
-                  },
-                ),
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                  ),
-                  obscureText: true,
-                  textAlign: TextAlign.center,
-                  controller: _passwordController,
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'La password non può essere nulla!';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) {
-                    _authData['password'] = value;
-                  },
-                  onFieldSubmitted: (_) {
-                    _submit();
-                  },
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                if (_isLoading)
-                  LoadingIndicator('Caricamento')
-                else
-                  RaiseButton(
-                    _submit,
-                    const Text(
-                      'Connessione',
-                      style: TextStyle(
-                        fontSize: 20,
-                      ),
+        child: Center(
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                children: <Widget>[
+                  Text(
+                    'TimeManager',
+                    style: TextStyle(
+                      fontSize: 30,
+                      color: Theme.of(context).colorScheme.secondary,
+                      fontWeight: FontWeight.bold,
                     ),
-                    Theme.of(context).colorScheme.secondary,
                   ),
-              ],
+                  const SizedBox(height: 10),
+                  // TextFormField(
+                  //   initialValue: 'https://ticketing.in-am.it/gmaoCS02',
+                  //   decoration: const InputDecoration(
+                  //       labelText: 'URL ambiente',
+                  //       contentPadding: EdgeInsets.zero),
+                  //   keyboardType: TextInputType.name,
+                  //   textAlign: TextAlign.center,
+                  //   validator: (value) {
+                  //     if (value.isEmpty) {
+                  //       return 'URL invalido!';
+                  //     }
+                  //     return null;
+                  //   },
+                  //   onSaved: (value) {
+                  //     _authData['url'] = value;
+                  //   },
+                  // ),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                        labelText: 'Login', contentPadding: EdgeInsets.zero),
+                    keyboardType: TextInputType.name,
+                    textAlign: TextAlign.center,
+                    validator: (value) {
+                      if (value.isEmpty) {
+                        return 'Nome invalido!';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _authData['username'] = value;
+                    },
+                  ),
+                  TextFormField(
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                    ),
+                    obscureText: true,
+                    textAlign: TextAlign.center,
+                    controller: _passwordController,
+                    validator: (value) {
+                      if (value.isEmpty) {
+                        return 'La password non può essere nulla!';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _authData['password'] = value;
+                    },
+                    onFieldSubmitted: (_) {
+                      _submit();
+                    },
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  if (_isLoading)
+                    LoadingIndicator('Caricamento')
+                  else
+                    RaiseButton(
+                      _submit,
+                      const Text(
+                        'Connessione',
+                        style: TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
+                      Theme.of(context).colorScheme.secondary,
+                    ),
+                ],
+              ),
             ),
           ),
         ),

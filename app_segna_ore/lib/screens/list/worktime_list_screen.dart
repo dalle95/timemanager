@@ -10,20 +10,30 @@ import '../../widgets/loading_indicator.dart';
 class WorkTimeListScreen extends StatelessWidget {
   static const routeName = '/worktime-list';
 
+  Future<void> _refreshWorkTimes(
+      BuildContext context, Map<String, String> filtro) async {
+    await Provider.of<WorkTimes>(context, listen: false)
+        .fetchAndSetFilteredWorkTimes(filtro);
+  }
+
   @override
   Widget build(BuildContext context) {
-    Future<void> _refresWorktimes(
-        BuildContext context, String periodoRiferimento) async {
-      await Provider.of<WorkTimes>(context, listen: false)
-          .fetchAndSetWorkTimes(periodoRiferimento);
-    }
-
     var functionData =
         ModalRoute.of(context).settings.arguments as Map<String, dynamic>;
     var function = functionData['function'];
+    String woID;
+    Map<String, String> filtro;
 
-    final DateTime _mese = DateTime.now();
-    final String _periodoRiferimento = DateFormat("MM/yyyy").format(_mese);
+    if (functionData.containsKey("filter")) {
+      if (functionData['filter'].containsKey("wo_id")) {
+        woID = functionData['filter']['wo_id'];
+        filtro = {'wo_id': woID};
+      }
+    } else {
+      final DateTime mese = DateTime.now();
+      final String periodoRiferimento = DateFormat("MM/yyyy").format(mese);
+      filtro = {'periodoCompetenza': periodoRiferimento};
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -39,16 +49,18 @@ class WorkTimeListScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              Navigator.of(context).pushNamed(WorkTimeDetailScreen.routeName);
+              Navigator.of(context).pushNamed(
+                WorkTimeDetailScreen.routeName,
+                arguments: woID != null ? {'wo_id': woID} : null,
+              );
             },
           ),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => _refresWorktimes(context, _periodoRiferimento),
+        onRefresh: () => _refreshWorkTimes(context, filtro),
         child: FutureBuilder(
-          future: Provider.of<WorkTimes>(context, listen: false)
-              .fetchAndSetWorkTimes(_periodoRiferimento),
+          future: _refreshWorkTimes(context, filtro),
           builder: (ctx, dataSnapshot) {
             if (dataSnapshot.connectionState == ConnectionState.waiting) {
               return LoadingIndicator('In caricamento!');
@@ -68,7 +80,10 @@ class WorkTimeListScreen extends StatelessWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).pushNamed(WorkTimeDetailScreen.routeName);
+          Navigator.of(context).pushNamed(
+            WorkTimeDetailScreen.routeName,
+            arguments: woID != null ? {'wo_id': woID} : null,
+          );
         },
         child: const Icon(Icons.add),
       ),

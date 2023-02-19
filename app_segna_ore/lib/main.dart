@@ -1,24 +1,25 @@
-import 'package:app_segna_ore/providers/materials.dart';
-import 'package:app_segna_ore/screens/list/material_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../providers/actiontypes.dart';
 import '../providers/boxes.dart';
 import '../providers/tasks.dart';
 import '../providers/auth.dart';
-import 'providers/worktimes.dart';
+import '../providers/worktimes.dart';
+import '../providers/materials.dart';
 
 import '../screens/detail/worktime_detail.dart';
-import 'screens/list/worktime_list_screen.dart';
+import '../screens/list/worktime_list_screen.dart';
+import '../screens/list/material_list_screen.dart';
 import '../screens/tabs_screen.dart';
 import '../screens/detail/box_detail_screen.dart';
 import '../screens/auth_screen.dart';
-import 'screens/list/task_list_screen.dart';
+import '../screens/list/task_list_screen.dart';
 import '../screens/splash_screen.dart';
-import 'screens/detail/task_detail.dart';
-import 'screens/list/actiontype_list_screen.dart';
-import 'screens/list/box_list_screen.dart';
+import '../screens/detail/task_detail.dart';
+import '../screens/list/actiontype_list_screen.dart';
+import '../screens/list/box_list_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -40,7 +41,7 @@ class _MyAppState extends State<MyApp> {
           update: (ctx, auth, previousTasks) => Tasks(
             auth.urlAmbiente,
             auth.token,
-            auth.userId,
+            auth.user.id,
             previousTasks == null ? [] : previousTasks.tasks,
           ),
         ),
@@ -69,13 +70,21 @@ class _MyAppState extends State<MyApp> {
           update: (ctx, auth, previousWorkTimes) => WorkTimes(
             auth.urlAmbiente,
             auth.token,
-            auth.userId,
+            auth.user,
             previousWorkTimes == null ? [] : previousWorkTimes.workTimes,
           ),
         ),
       ],
       child: Consumer<Auth>(
         builder: (ctx, auth, _) => MaterialApp(
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('it'),
+          ],
           title: 'TimeManager',
           theme: ThemeData(
             brightness: Brightness.light,

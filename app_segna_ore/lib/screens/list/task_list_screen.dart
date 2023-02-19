@@ -1,8 +1,10 @@
+import 'package:app_segna_ore/providers/actiontype.dart';
+import 'package:app_segna_ore/providers/box.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/tasks.dart';
-
+import '../../providers/material.dart' as carl;
 import '../detail/task_detail.dart';
 
 import '../../widgets/loading_indicator.dart';
@@ -64,7 +66,34 @@ class TaskListScreen extends StatelessWidget {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: function == 'search'
-          ? null
+          ? FloatingActionButton(
+              child: const Icon(Icons.disabled_by_default_rounded),
+              onPressed: () {
+                Navigator.of(context).pop(
+                  {
+                    'id': null,
+                    'code': '',
+                    'description': '',
+                    'statusCode': '',
+                    'actionType':
+                        ActionType(id: null, code: '', description: ''),
+                    'cliente': Box(
+                        id: null,
+                        code: '',
+                        description: '',
+                        eqptType: '',
+                        statusCode: ''),
+                    'commessa': carl.Material(
+                        id: null,
+                        code: '',
+                        description: '',
+                        eqptType: '',
+                        statusCode: ''),
+                    'xtraTxt10': '',
+                    'workflow': [],
+                  },
+                );
+              })
           : FloatingActionButton(
               onPressed: () {
                 Navigator.of(context).pushNamed(TaskDetailScreen.routeName);

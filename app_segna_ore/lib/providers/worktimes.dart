@@ -1,23 +1,25 @@
 import 'dart:convert';
-import 'package:app_segna_ore/providers/actiontype.dart';
-import 'package:app_segna_ore/providers/box.dart';
-import 'package:app_segna_ore/providers/task.dart';
-import 'package:app_segna_ore/providers/workflow_transitions.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../providers/worktime.dart';
 import '../providers/material.dart' as carl;
+import '../providers/actiontype.dart';
+import '../providers/actor.dart';
+import '../providers/box.dart';
+import '../providers/task.dart';
+import '../models/http_exception.dart';
 
 class WorkTimes with ChangeNotifier {
   final String authToken;
-  final String userId;
+  final Actor user;
   final String urlAmbiente;
 
   List<WorkTime> _workTimes = [];
 
-  WorkTimes(this.urlAmbiente, this.authToken, this.userId, this._workTimes);
+  WorkTimes(this.urlAmbiente, this.authToken, this.user, this._workTimes);
 
   // Lista dei WO
   List<WorkTime> get workTimes {
@@ -41,7 +43,8 @@ class WorkTimes with ChangeNotifier {
       if (DateTime(_workTimes[index].data.year, _workTimes[index].data.month,
               _workTimes[index].data.day) ==
           giorno) {
-        oreSegnate = oreSegnate + _workTimes[index].tempoLavorato.inHours;
+        oreSegnate =
+            oreSegnate + (_workTimes[index].tempoFatturato.inMinutes / 60);
       }
     }
     return oreSegnate;
@@ -57,27 +60,11 @@ class WorkTimes with ChangeNotifier {
       "X-CS-Access-Token": authToken,
     };
 
-    // Funzione per convertire una stringa in una durata
-    Duration parseDuration(String s) {
-      int hours = 0;
-      int minutes = 0;
-      int micros;
-      List<String> parts = s.split(':');
-      if (parts.length > 2) {
-        hours = int.parse(parts[parts.length - 3]);
-      }
-      if (parts.length > 1) {
-        minutes = int.parse(parts[parts.length - 2]);
-      }
-      micros = (double.parse(parts[parts.length - 1]) * 1000000).round();
-      return Duration(hours: hours, minutes: minutes, microseconds: micros);
-    }
-
     // Definizione del link della chiamata
     var url = Uri.parse(
       periodoRiferimento == null
-          ? '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note,&include=technician,commessa,WO&filter[technician.id]=$userId'
-          : '$urlAmbiente/api/entities/v1/wo?fields=code,description,statusCode,WOBegin,WOEnd,workPriority,time01,time02,actionType,createdBy,equipments&include=actionType,createdBy,equipments&filter[wo][actionType.code]=TEST_SCRIPT&filter[wo][createdBy.id]=$userId&filter[xtraTxt01]=$periodoRiferimento',
+          ? '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note,&include=technician,commessa,WO&filter[technician.code]=${user.code}&sort=-occupationDate'
+          : '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note,&include=technician,commessa,WO&filter[technician.code]=${user.code}&sort=-occupationDate',
     );
 
     // Preparazione del try-catch degli errori
@@ -94,6 +81,12 @@ class WorkTimes with ChangeNotifier {
       if (extractedData['data'] == null) {
         return;
       }
+
+      Actor attore = Actor(
+        id: user.id,
+        code: user.code,
+        nome: user.nome,
+      );
 
       // Iterazione per ogni risultato
       for (var occupation in extractedData['data']) {
@@ -143,72 +136,83 @@ class WorkTimes with ChangeNotifier {
 
         // Recupero del materiale associato alla occupazione
         for (var record in extractedData['included']) {
-          // Controllo il material collegato
-          if (record['id'] ==
-              occupation['relationships']['commessa']['data']['id']) {
-            // Definizione Material associato
-            material = carl.Material(
-              id: record['id'],
-              code: record['attributes']['code'],
-              description: record['attributes']['description'] ?? '',
-              eqptType: record['attributes']['eqptType'],
-              statusCode: record['attributes']['statusCode'],
-            );
+          // Controllo che il materiale non sia nullo
+          if (occupation['relationships']['commessa']['data'] != null) {
+            // Controllo il material collegato
+            if (record['id'] ==
+                occupation['relationships']['commessa']['data']['id']) {
+              // Definizione Material associato
+              material = carl.Material(
+                id: record['id'],
+                code: record['attributes']['code'],
+                description: record['attributes']['description'] ?? '',
+                eqptType: record['attributes']['eqptType'],
+                statusCode: record['attributes']['statusCode'],
+              );
+            }
           }
 
-          // Controllo il WO collegato
-          if (record['id'] == occupation['relationships']['WO']['data']['id']) {
-            // Definisco il WO associato
-            task = Task(
-              id: record['id'],
-              code: record['attributes']['code'],
-              description: record['attributes']['description'],
-              statusCode: record['attributes']['statusCode'],
-              actionType: ActionType(
-                id: null,
-                code: '',
-                description: '',
-              ),
-              cliente: Box(
-                id: null,
-                code: '',
-                description: '',
-                eqptType: '',
-                statusCode: '',
-              ),
-              commessa: carl.Material(
-                id: null,
-                code: '',
-                description: '',
-                eqptType: '',
-                statusCode: '',
-              ),
-              stima: const Duration(
-                hours: 0,
-                minutes: 0,
-              ),
-              dataInizio: record['attributes']['WOBegin'],
-              dataFine: record['attributes']['WOEnd'],
-              note: record['attributes']['xtraTxt10'],
-              workflowTransitions: [],
-            );
+          // Controllo che il WO non sia nullo
+          if (occupation['relationships']['WO']['data'] != null) {
+            // Controllo il WO collegato
+            if (record['id'] ==
+                occupation['relationships']['WO']['data']['id']) {
+              // Definisco il WO associato
+              task = Task(
+                id: record['id'],
+                code: record['attributes']['code'],
+                description: record['attributes']['description'],
+                statusCode: record['attributes']['statusCode'],
+                actionType: ActionType(
+                  id: null,
+                  code: '',
+                  description: '',
+                ),
+                cliente: Box(
+                  id: null,
+                  code: '',
+                  description: '',
+                  eqptType: '',
+                  statusCode: '',
+                ),
+                commessa: carl.Material(
+                  id: null,
+                  code: '',
+                  description: '',
+                  eqptType: '',
+                  statusCode: '',
+                ),
+                stima: const Duration(
+                  hours: 0,
+                  minutes: 0,
+                ),
+                dataInizio: DateTime.parse(record['attributes']['WOBegin']),
+                dataFine: DateTime.parse(record['attributes']['WOEnd']),
+                note: record['attributes']['xtraTxt10'],
+                workflowTransitions: [],
+              );
+            }
           }
         }
 
-        print('data: ${occupation['attributes']['occupationDate']}ù');
+        print(
+            'data: ${occupation['attributes']['occupationDate']}, note: ${occupation['attributes']['note']}');
 
         // Aggiunta WorkTime alla lista
         loadedWorkTimes.add(
           WorkTime(
             id: occupation['id'],
+            attore: attore,
             note: occupation['attributes']['note'] ?? '',
-            data: DateTime.parse(occupation['attributes']['occupationDate']),
-            tempoLavorato:
-                parseDuration(occupation['attributes']['duration']) ??
-                    const Duration(
-                      hours: 0,
-                      minutes: 0,
-                    ),
+            data: DateTime.parse(occupation['attributes']['occupationDate'])
+                .add(const Duration(hours: 1)),
+            tempoFatturato: Duration(
+                    minutes:
+                        (occupation['attributes']['duration'] * 60).toInt()) ??
+                const Duration(
+                  hours: 0,
+                  minutes: 0,
+                ),
             // tempoFatturato: parseDuration(occupation['attributes']['time02']) ??
             //     const Duration(
             //       hours: 0,
@@ -220,7 +224,204 @@ class WorkTimes with ChangeNotifier {
         );
 
         // Ordino la lista in base al codice del WO
-        loadedWorkTimes.sort((a, b) => a.data.compareTo(b.data));
+        //loadedWorkTimes.sort((a, b) => a.data.compareTo(b.data));
+
+        //   },
+        // );
+      }
+    } catch (error) {
+      print(error.toString());
+      throw error;
+    } finally {
+      // Aggiorno la lista di WO
+      _workTimes = loadedWorkTimes;
+      notifyListeners();
+    }
+  }
+
+  // Funzione per estrarre le nature tramite richiesta get
+  Future<void> fetchAndSetFilteredWorkTimes([Map filtro]) async {
+    // Inizializzazione lista vuota
+    final List<WorkTime> loadedWorkTimes = [];
+
+    // Definizione dell'header
+    Map<String, String> headers = {
+      "X-CS-Access-Token": authToken,
+    };
+
+    String endpoint;
+
+    if (filtro.containsKey("wo_id")) {
+      String wo = filtro['wo_id'];
+
+      endpoint =
+          '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note,&include=technician,commessa,WO&filter[technician.code]=${user.code}&filter[WO.id]=$wo&sort=-occupationDate';
+    }
+    if (filtro.containsKey("periodoCompetenza")) {
+      String periodoCompetenza = filtro['periodoCompetenza'];
+
+      endpoint =
+          '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note,&include=technician,commessa,WO&filter[technician.code]=${user.code}&sort=-occupationDate';
+    }
+
+    // Definizione del link della chiamata
+    var url = Uri.parse(endpoint);
+
+    // Preparazione del try-catch degli errori
+    try {
+      // Creazione della chiamata per estrarre i WorkTimes
+      var response = await http.get(
+        url,
+        headers: headers,
+      );
+      // Estrazione del risultato della chiamata
+      var extractedData = json.decode(response.body) as Map<String, dynamic>;
+
+      // Se non sono presenti WO esco dalla funzione
+      if (extractedData['data'] == null) {
+        return;
+      }
+
+      Actor attore = Actor(
+        id: user.id,
+        code: user.code,
+        nome: user.nome,
+      );
+
+      // Iterazione per ogni risultato
+      for (var occupation in extractedData['data']) {
+        // Definisco il materiale nullo
+        var material = carl.Material(
+          id: null,
+          code: '',
+          description: '',
+          eqptType: '',
+          statusCode: '',
+        );
+
+        // Definisco il WO nullo
+        var task = Task(
+          id: null,
+          code: '',
+          description: '',
+          statusCode: '',
+          actionType: ActionType(
+            id: null,
+            code: '',
+            description: '',
+          ),
+          cliente: Box(
+            id: null,
+            code: '',
+            description: '',
+            eqptType: '',
+            statusCode: '',
+          ),
+          commessa: carl.Material(
+            id: null,
+            code: '',
+            description: '',
+            eqptType: '',
+            statusCode: '',
+          ),
+          stima: const Duration(
+            hours: 0,
+            minutes: 0,
+          ),
+          dataInizio: DateTime.now(),
+          dataFine: DateTime.now(),
+          note: '',
+          workflowTransitions: [],
+        );
+
+        // Recupero del materiale associato alla occupazione
+        for (var record in extractedData['included']) {
+          // Controllo che il materiale non sia nullo
+          if (occupation['relationships']['commessa']['data'] != null) {
+            // Controllo il material collegato
+            if (record['id'] ==
+                occupation['relationships']['commessa']['data']['id']) {
+              // Definizione Material associato
+              material = carl.Material(
+                id: record['id'],
+                code: record['attributes']['code'],
+                description: record['attributes']['description'] ?? '',
+                eqptType: record['attributes']['eqptType'],
+                statusCode: record['attributes']['statusCode'],
+              );
+            }
+          }
+
+          // Controllo che il WO non sia nullo
+          if (occupation['relationships']['WO']['data'] != null) {
+            // Controllo il WO collegato
+            if (record['id'] ==
+                occupation['relationships']['WO']['data']['id']) {
+              // Definisco il WO associato
+              task = Task(
+                id: record['id'],
+                code: record['attributes']['code'],
+                description: record['attributes']['description'],
+                statusCode: record['attributes']['statusCode'],
+                actionType: ActionType(
+                  id: null,
+                  code: '',
+                  description: '',
+                ),
+                cliente: Box(
+                  id: null,
+                  code: '',
+                  description: '',
+                  eqptType: '',
+                  statusCode: '',
+                ),
+                commessa: carl.Material(
+                  id: null,
+                  code: '',
+                  description: '',
+                  eqptType: '',
+                  statusCode: '',
+                ),
+                stima: const Duration(
+                  hours: 0,
+                  minutes: 0,
+                ),
+                dataInizio: DateTime.parse(record['attributes']['WOBegin']),
+                dataFine: DateTime.parse(record['attributes']['WOEnd']),
+                note: record['attributes']['xtraTxt10'],
+                workflowTransitions: [],
+              );
+            }
+          }
+        }
+
+        // Aggiunta WorkTime alla lista
+        loadedWorkTimes.add(
+          WorkTime(
+            id: occupation['id'],
+            attore: attore,
+            note: occupation['attributes']['note'] ?? '',
+            data: DateTime.parse(occupation['attributes']['occupationDate'])
+                .add(const Duration(hours: 1)),
+            tempoFatturato: Duration(
+                    minutes:
+                        (occupation['attributes']['duration'] * 60).toInt()) ??
+                const Duration(
+                  hours: 0,
+                  minutes: 0,
+                ),
+            // tempoFatturato: parseDuration(occupation['attributes']['time02']) ??
+            //     const Duration(
+            //       hours: 0,
+            //       minutes: 0,
+            //     ),
+            commessa: material,
+            task: task,
+          ),
+        );
+
+        // Ordino la lista in base al codice del WO
+        //loadedWorkTimes.sort((a, b) => a.data.compareTo(b.data));
 
         //   },
         // );
@@ -236,101 +437,238 @@ class WorkTimes with ChangeNotifier {
   }
 
   Future<void> addWorkTime(WorkTime workTime, {int index = 0}) async {
+    print('Funzione addWorkTime');
+
     // Preparo l'header
     Map<String, String> headers = {
       "X-CS-Access-Token": authToken,
       "Content-Type": "application/vnd.api+json",
     };
 
-    //   final url = Uri.parse('$urlAmbiente/api/entities/v1/WorkTime');
+    final url = Uri.parse('$urlAmbiente/api/entities/v1/occupation');
 
-    //   final data = json.encode(
-    //     {
-    //       'data': {
-    //         'type': 'WorkTime',
-    //         'attributes': {
-    //           'uowner': WorkTime.uowner,
-    //           'WorkTimeDate': WorkTime.WorkTimeDate,
-    //         },
-    //         'relationships': {
-    //           "WO": {
-    //             "data": {
-    //               "type": "wo",
-    //               "id": WorkTime.wo.id,
-    //             }
-    //           },
-    //           // "costCenter": {
-    //           //   "data": {
-    //           //     "type": "costcenter",
-    //           //     "id": "177fed5ef2f-2ab4",
-    //           //   }
-    //           // }
-    //         }
-    //       }
-    //     },
-    //   );
+    final data = json.encode(workTime.task.id != null
+        ? {
+            'data': {
+              'type': 'occupation',
+              'attributes': {
+                'UOwner': user.code,
+                'note': workTime.note,
+                'occupationDate':
+                    "${workTime.data.toIso8601String().substring(0, 23)}+01:00",
+                'duration': (workTime.tempoFatturato.inMinutes / 60),
+              },
+              'relationships': {
+                "WO": {
+                  "data": {
+                    "type": "wo",
+                    "id": workTime.task.id,
+                  }
+                },
+                "technician": {
+                  "data": {
+                    "type": "technician",
+                    "id": user.tecnicoID,
+                  }
+                },
+                "commessa": {
+                  "data": {
+                    "type": "material",
+                    "id": workTime.commessa.id,
+                  }
+                }
+              }
+            }
+          }
+        : {
+            'data': {
+              'type': 'occupation',
+              'attributes': {
+                'UOwner': user.code,
+                'note': workTime.note,
+                'occupationDate':
+                    "${workTime.data.toIso8601String().substring(0, 23)}+01:00",
+                'duration': (workTime.tempoFatturato.inMinutes / 60),
+              },
+              'relationships': {
+                "occupationType": {
+                  "data": {
+                    "type": "occupationtype",
+                    "id": "185720e8249-6698e",
+                  }
+                },
+                "technician": {
+                  "data": {
+                    "type": "technician",
+                    "id": user.tecnicoID,
+                  }
+                },
+                "commessa": {
+                  "data": {
+                    "type": "material",
+                    "id": workTime.commessa.id,
+                  }
+                }
+              }
+            }
+          });
 
-    //   //print(url);
-    //   try {
-    //     final response = await http.post(
-    //       urlWo,
-    //       body: dataWO,
-    //       headers: headers,
-    //     );
+    //print(url);
+    try {
+      final response = await http.post(
+        url,
+        body: data,
+        headers: headers,
+      );
 
-    //     workOrder.id = json.decode(response.body)['data']['id'];
+      print('Stato occupation: ${json.decode(response.statusCode.toString())}');
 
-    //     print('Stato wo: ${json.decode(response.statusCode.toString())}');
+      if (response.statusCode >= 400) {
+        throw HttpException(
+          json.decode(response.body)['errors'][0]['title'].toString(),
+        );
+      }
 
-    //     final dataBox = json.encode(
-    //       {
-    //         "data": {
-    //           "type": "woeqpt",
-    //           "attributes": {
-    //             "UOwner": null,
-    //             "modifyDate": null,
-    //             "directEqpt": true,
-    //             "persoId": null,
-    //             "referEqpt": false
-    //           },
-    //           "relationships": {
-    //             "WO": {
-    //               "data": {"type": "wo", "id": workOrder.id}
-    //             },
-    //             "eqpt": {
-    //               "data": {"type": "box", "id": workOrder.box.id}
-    //             }
-    //           }
-    //         }
-    //       },
-    //     );
+      workTime.id = json.decode(response.body)['data']['id'];
 
-    //     if (workOrder.box.id != null) {
-    //       final responseEquipment = await http.post(
-    //         urlEquipment,
-    //         body: dataBox,
-    //         headers: headers,
-    //       );
+      _workTimes.insert(index, workTime);
+      notifyListeners();
+    } catch (error) {
+      print(error);
+      throw error;
+    }
+  }
 
-    //       print('Stato box: ${responseEquipment.statusCode}');
-    //     }
+  Future<void> updateWorkTime(
+      String id, WorkTime initWorkTime, WorkTime newWorkTime,
+      {int index = 0}) async {
+    final workTimeIndex =
+        _workTimes.indexWhere((worktime) => worktime.id == id);
 
-    //     final newWorkOrder = WorkOrder(
-    //       codice: workOrder.codice,
-    //       descrizione: workOrder.descrizione,
-    //       statusCode: workOrder.statusCode,
-    //       actionType: workOrder.actionType,
-    //       box: workOrder.box,
-    //       id: json.decode(response.body)['data']['id'],
-    //     );
+    // Preparo l'header
+    Map<String, String> headers = {
+      "X-CS-Access-Token": authToken,
+      "Content-Type": "application/vnd.api+json",
+    };
 
-    //     //print(json.decode(response.body)['data']['id']);
+    final url = Uri.parse('$urlAmbiente/api/entities/v1/occupation/$id');
 
-    workTimes.insert(index, workTime);
+    final data = json.encode(
+      newWorkTime.task.id != null
+          ? {
+              'data': {
+                'type': 'occupation',
+                'attributes': {
+                  'UOwner': user.code,
+                  'note': newWorkTime.note,
+                  'occupationDate':
+                      "${newWorkTime.data.toIso8601String().substring(0, 23)}+01:00",
+                  'duration': (newWorkTime.tempoFatturato.inMinutes / 60),
+                },
+                'relationships': {
+                  "WO": {
+                    "data": {
+                      "type": "wo",
+                      "id": newWorkTime.task.id,
+                    }
+                  },
+                  "technician": {
+                    "data": {
+                      "type": "technician",
+                      "id": user.tecnicoID,
+                    }
+                  },
+                  "commessa": {
+                    "data": {
+                      "type": "material",
+                      "id": newWorkTime.commessa.id,
+                    }
+                  }
+                }
+              }
+            }
+          : {
+              'data': {
+                'type': 'occupation',
+                'attributes': {
+                  'UOwner': user.code,
+                  'note': newWorkTime.note,
+                  'occupationDate':
+                      "${newWorkTime.data.toIso8601String().substring(0, 23)}+01:00",
+                  'duration': (newWorkTime.tempoFatturato.inMinutes / 60),
+                },
+                'relationships': {
+                  "occupationType": {
+                    "data": {
+                      "type": "occupationtype",
+                      "id": "185720e8249-6698e",
+                    }
+                  },
+                  "technician": {
+                    "data": {
+                      "type": "technician",
+                      "id": user.tecnicoID,
+                    }
+                  },
+                  "commessa": {
+                    "data": {
+                      "type": "material",
+                      "id": newWorkTime.commessa.id,
+                    }
+                  }
+                }
+              }
+            },
+    );
+
+    if (workTimeIndex >= 0) {
+      try {
+        final response = await http.patch(
+          url,
+          body: data,
+          headers: headers,
+        );
+
+        print(response.body);
+
+        print(
+          'Stato occupation: ${json.decode(response.statusCode.toString())}',
+        );
+
+        _workTimes[workTimeIndex] = newWorkTime;
+
+        notifyListeners();
+      } catch (error) {
+        print(error);
+        throw error;
+      }
+    }
+  }
+
+  Future<void> deleteWorkTime(String workTimeID) async {
+    // Preparo l'header
+    Map<String, String> headers = {
+      "X-CS-Access-Token": authToken,
+      "Content-Type": "application/vnd.api+json",
+    };
+
+    final url =
+        Uri.parse('$urlAmbiente/api/entities/v1/occupation/$workTimeID');
+    //print(urlDeleteWoEqpt);
+
+    final response = await http.delete(
+      url,
+      headers: headers,
+    );
+    print('Stato delete WorkTime: ${response.statusCode}');
+
+    if (response.statusCode >= 400) {
+      throw HttpException(
+        json.decode(response.body)['errors'][0]['title'].toString(),
+      );
+    }
+
+    _workTimes.removeWhere((workTime) => workTime.id == workTimeID);
     notifyListeners();
-    //   } catch (error) {
-    //     print(error);
-    //     throw error;
-    //   }
   }
 }

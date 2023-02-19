@@ -1,20 +1,19 @@
-import 'package:app_segna_ore/providers/worktime.dart';
-import 'package:app_segna_ore/providers/worktimes.dart';
-import 'package:app_segna_ore/screens/list/material_list_screen.dart';
-import 'package:app_segna_ore/screens/list/task_list_screen.dart';
+import 'package:app_segna_ore/providers/tasks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/flutter_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/http_exception.dart';
 import '../../providers/actiontype.dart';
 import '../../providers/task.dart';
-import '../../providers/tasks.dart';
-import '../../providers/box.dart';
 import '../../providers/material.dart' as carl;
+import '../../providers/worktime.dart';
+import '../../providers/worktimes.dart';
 
-import '../list/box_list_screen.dart';
-import '../list/actiontype_list_screen.dart';
+import '../../screens/list/material_list_screen.dart';
+import '../../screens/list/task_list_screen.dart';
+
 import '../../widgets/flat_button.dart';
 
 enum tipologia { insert, update }
@@ -120,23 +119,41 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      final id = ModalRoute.of(context).settings.arguments as String;
-      if (id != null) {
-        _editedWorkTime =
-            Provider.of<WorkTimes>(context, listen: false).findById(id);
+      final arguments =
+          ModalRoute.of(context).settings.arguments as Map<String, String>;
+      if (arguments != null) {
+        print(arguments);
 
-        _initWorkTime = WorkTime(
-          id: _editedWorkTime.id,
-          data: _editedWorkTime.data,
-          task: _editedWorkTime.task,
-          commessa: _editedWorkTime.commessa,
-          tempoLavorato: _editedWorkTime.tempoLavorato,
-          tempoFatturato: _editedWorkTime.tempoFatturato,
-          note: _editedWorkTime.note,
-        );
+        if (arguments.containsKey("wo_id")) {
+          final woID = arguments['wo_id'];
+          _editedWorkTime.task =
+              Provider.of<Tasks>(context, listen: false).findById(woID);
+          _task = _editedWorkTime.task;
+          _commessa = _editedWorkTime.task.commessa;
+          _initWorkTime.note = _editedWorkTime.task.description;
+        }
 
-        _task = _editedWorkTime.task;
-        _commessa = _editedWorkTime.commessa;
+        if (arguments.containsKey("worktime_id")) {
+          final id = arguments['worktime_id'];
+
+          if (id != null) {
+            _editedWorkTime =
+                Provider.of<WorkTimes>(context, listen: false).findById(id);
+
+            _initWorkTime = WorkTime(
+              id: _editedWorkTime.id,
+              data: _editedWorkTime.data,
+              task: _editedWorkTime.task,
+              commessa: _editedWorkTime.commessa,
+              tempoLavorato: _editedWorkTime.tempoLavorato,
+              tempoFatturato: _editedWorkTime.tempoFatturato,
+              note: _editedWorkTime.note,
+            );
+
+            _task = _editedWorkTime.task;
+            _commessa = _editedWorkTime.commessa;
+          }
+        }
       }
     }
     _isInit = false;
@@ -161,10 +178,12 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
           statusCode: result['statusCode'] ?? '',
           cliente: result['cliente'] ?? '',
           commessa: result['commessa'] ?? '',
+          note: result['xtraTxt10'],
           workflowTransitions: result['workflowTransitions'] ?? [],
         );
 
         _commessa = _task.commessa;
+        _initWorkTime.note = _task.description;
       });
     }
   }
@@ -188,65 +207,6 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
         );
       });
     }
-  }
-
-  void _showTimePickerTempoLavorato() async {
-    Picker(
-      adapter: NumberPickerAdapter(
-        data: <NumberPickerColumn>[
-          NumberPickerColumn(
-            initValue: _initWorkTime.tempoLavorato.inHours.toInt(),
-            begin: 0,
-            end: 999,
-            suffix: const Text(' ore'),
-          ),
-          NumberPickerColumn(
-            initValue: _initWorkTime.tempoLavorato.inMinutes.toInt(),
-            begin: 0,
-            end: 60,
-            suffix: const Text(' minuti'),
-            jump: 15,
-          ),
-        ],
-      ),
-      delimiter: <PickerDelimiter>[
-        PickerDelimiter(
-          child: Container(
-            width: 30.0,
-            alignment: Alignment.center,
-            child: const Icon(Icons.more_vert),
-          ),
-        )
-      ],
-      hideHeader: true,
-      confirmText: 'Conferma',
-      confirmTextStyle: TextStyle(
-        inherit: false,
-        color: Theme.of(context).colorScheme.secondary,
-        fontSize: 22,
-      ),
-      cancelText: 'Annulla',
-      cancelTextStyle: const TextStyle(
-        inherit: false,
-        color: Colors.black,
-        fontSize: 22,
-      ),
-      title: const Text(
-        'Inserisci la durata',
-        style: TextStyle(fontSize: 25),
-        textAlign: TextAlign.center,
-      ),
-      selectedTextStyle: TextStyle(
-        color: Theme.of(context).colorScheme.secondary,
-      ),
-      onConfirm: (Picker picker, List<int> value) {
-        setState(() {
-          _initWorkTime.tempoLavorato = Duration(
-              hours: picker.getSelectedValues()[0],
-              minutes: picker.getSelectedValues()[1]);
-        });
-      },
-    ).showDialog(context);
   }
 
   void _showTimePickerTempoFatturato() async {
@@ -311,6 +271,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
   void _mostraDatePicker() async {
     DateTime pickedDate = await showDatePicker(
       context: context,
+      locale: const Locale("it", "IT"),
       initialDate: DateTime.now(),
       firstDate: DateTime(1970),
       lastDate: DateTime(3000),
@@ -342,10 +303,31 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
     });
   }
 
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Si è verificato un errore'),
+        content: Text(message),
+        actions: [
+          FlatButton(
+            () {
+              Navigator.of(context).pop();
+            },
+            const Text('Conferma'),
+          )
+        ],
+      ),
+    );
+  }
+
   format(Duration d) =>
       d.toString().split('.').first.padLeft(8, "0").substring(0, 5);
 
   Future<void> _saveForm() async {
+    var scaffold = ScaffoldMessenger.of(context);
+    var navigator = Navigator.of(context);
+
     var isValid = _form.currentState.validate();
     if (!isValid) {
       return;
@@ -356,21 +338,40 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
       _isLoading = true;
     });
 
-    print('WorkTime: id: ${_initWorkTime.id ?? ''}');
-
+    _editedWorkTime.data = _initWorkTime.data;
     _editedWorkTime.task = _task;
     _editedWorkTime.commessa = _commessa;
+    _editedWorkTime.tempoFatturato = _initWorkTime.tempoFatturato;
 
-    print('WorkTime: id: ${_editedWorkTime.id ?? ''}');
+    print(
+        'WorkTime: id: ${_editedWorkTime.id ?? ''}, data: ${_editedWorkTime.data}, commessa: ${_editedWorkTime.commessa.code}, durata: ${_editedWorkTime.tempoFatturato.toString()}, note: ${_editedWorkTime.note}');
 
     if (_editedWorkTime.id != null) {
       try {
-        //Per aggiornare un WO già esistente
-        // await Provider.of<WorkTimes>(context, listen: false).updateWorkTime(
-        //     _editedWorkTime.id, _initWorkTime, _editedWorkTime);
+        //Per aggiornare un WorkTime già esistente
+        await Provider.of<WorkTimes>(context, listen: false).updateWorkTime(
+          _editedWorkTime.id,
+          _initWorkTime,
+          _editedWorkTime,
+        );
         _tipologia = tipologia.update;
+        navigator.pop();
+        scaffold.hideCurrentSnackBar();
+        scaffold.showSnackBar(
+          const SnackBar(
+            content: Text('WorkTime aggiornato!'),
+            duration: Duration(
+              seconds: 2,
+            ),
+          ),
+        );
+      } on HttpException catch (error) {
+        // Errore con messaggio
+        _showErrorDialog(error.toString());
       } catch (error) {
-        print(error);
+        // Errore generico
+        _showErrorDialog(
+            'Qualcosa è andato storto.. Anche ai migliori capita di sbagliare.');
       }
     } else {
       try {
@@ -378,53 +379,30 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
         await Provider.of<WorkTimes>(context, listen: false)
             .addWorkTime(_editedWorkTime);
         _tipologia = tipologia.insert;
-      } catch (error) {
-        print(error);
-        await showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Si è verificato un errore'),
-            content: const Text('Qualcosa è andato storto.'),
-            actions: [
-              FlatButton(
-                () {
-                  Navigator.of(context).pop();
-                },
-                const Text('Conferma'),
-              ),
-            ],
+        navigator.pop();
+        scaffold.hideCurrentSnackBar();
+        scaffold.showSnackBar(
+          SnackBar(
+            content: const Text('WorkTime inserito!'),
+            duration: const Duration(
+              seconds: 2,
+            ),
+            action: SnackBarAction(label: 'Annulla', onPressed: () {}),
           ),
         );
+      } on HttpException catch (error) {
+        // Errore con messaggio
+        _showErrorDialog(error.toString());
+      } catch (error) {
+        // Errore generico
+        _showErrorDialog(
+            'Qualcosa è andato storto.. Anche ai migliori capita di sbagliare.');
       }
     }
     ;
     setState(() {
       _isLoading = false;
     });
-    Navigator.of(context).pop();
-
-    if (_tipologia == tipologia.insert) {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('WorkTime inserito!'),
-          duration: const Duration(
-            seconds: 2,
-          ),
-          action: SnackBarAction(label: 'Annulla', onPressed: () {}),
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('WorkTime aggiornato!'),
-          duration: Duration(
-            seconds: 2,
-          ),
-        ),
-      );
-    }
   }
 
   @override
@@ -516,25 +494,25 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
                 padding: const EdgeInsets.all(8.0),
                 child: FlatButton(
                   _searchListMaterial,
-                  Text(_commessa.code),
+                  Text(_commessa.description),
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
-                'Tempo lavorato',
-                style: TextStyle(
-                  color: Color.fromARGB(255, 117, 117, 117),
-                  fontSize: 11,
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _showTimePickerTempoLavorato,
-                  Text('${format(_initWorkTime.tempoLavorato)}'),
-                ),
-              ),
-              const SizedBox(height: 10),
+              // const Text(
+              //   'Tempo lavorato',
+              //   style: TextStyle(
+              //     color: Color.fromARGB(255, 117, 117, 117),
+              //     fontSize: 11,
+              //   ),
+              // ),
+              // Padding(
+              //   padding: const EdgeInsets.all(8.0),
+              //   child: FlatButton(
+              //     _showTimePickerTempoLavorato,
+              //     Text('${format(_initWorkTime.tempoLavorato)}'),
+              //   ),
+              // ),
+              // const SizedBox(height: 10),
               const Text(
                 'Tempo fatturato',
                 style: TextStyle(
@@ -550,20 +528,21 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
                 ),
               ),
               TextFormField(
-                initialValue: _initWorkTime.note,
+                //tinitialValue: _initWorkTime.note,
+                controller: TextEditingController(text: _initWorkTime.note),
                 decoration: const InputDecoration(labelText: 'Note'),
-                textInputAction: TextInputAction.done,
                 minLines: 6,
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
                 onSaved: (value) {
-                  // _editedWorkTime = WorkTime(
-                  //   id: _editedWorkTime.id,
-                  //   codice: value,
-                  //   descrizione: _editedWorkTime.descrizione,
-                  //   statusCode: _editedWorkTime.statusCode,
-                  //   actionType: _editedWorkTime.actionType,
-                  // );
+                  _editedWorkTime = WorkTime(
+                    id: _editedWorkTime.id,
+                    task: _task,
+                    commessa: _commessa,
+                    data: _initWorkTime.data,
+                    tempoFatturato: _initWorkTime.tempoFatturato,
+                    note: value,
+                  );
                 },
                 onEditingComplete: () {
                   setState(() {});

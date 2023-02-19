@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:app_segna_ore/providers/workflow_transitions.dart';
 import 'package:flutter/material.dart';
@@ -101,7 +102,7 @@ class Tasks with ChangeNotifier {
 
           // Assegnazione natura
           actionType = ActionType(
-            id: actionTypeData['id'],
+            id: actionTypeData['data']['id'],
             code: actionTypeData['data']['attributes']['code'],
             description: actionTypeData['data']['attributes']['description'],
           );
@@ -304,9 +305,9 @@ class Tasks with ChangeNotifier {
             'workPriority': task.priority,
             'xtraTxt10': task.note,
             'WOBegin':
-                task.dataInizio.toIso8601String().substring(0, 23) + "+01:00",
+                "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
             'WOEnd':
-                task.dataFine.toIso8601String().substring(0, 23) + "+01:00",
+                "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
             'expTime': (task.stima.inMinutes / 60)
           },
           'relationships': {
@@ -339,59 +340,70 @@ class Tasks with ChangeNotifier {
       );
       print(response.body);
 
-      task.id = json.decode(response.body)['data']['id'];
-
       print('Stato wo: ${json.decode(response.statusCode.toString())}');
 
-      // Json per il cliente
-      final dataBox = json.encode(
-        {
-          "data": {
-            "type": "woeqpt",
-            "attributes": {
-              "UOwner": null,
-              "modifyDate": null,
-              "directEqpt": true,
-              "persoId": null,
-              "referEqpt": false
+      if (response.statusCode >= 400) {
+        throw HttpException(
+          json.decode(response.body)['errors'][0]['title'].toString(),
+        );
+      }
+
+      task.id = json.decode(response.body)['data']['id'];
+    } catch (error) {
+      //print(error);
+      throw error;
+    }
+
+    // Json per il cliente
+    final dataBox = json.encode(
+      {
+        "data": {
+          "type": "woeqpt",
+          "attributes": {
+            "UOwner": null,
+            "modifyDate": null,
+            "directEqpt": true,
+            "persoId": null,
+            "referEqpt": false
+          },
+          "relationships": {
+            "WO": {
+              "data": {"type": "wo", "id": task.id}
             },
-            "relationships": {
-              "WO": {
-                "data": {"type": "wo", "id": task.id}
-              },
-              "eqpt": {
-                "data": {"type": "box", "id": task.cliente.id}
-              }
+            "eqpt": {
+              "data": {"type": "box", "id": task.cliente.id}
             }
           }
-        },
-      );
+        }
+      },
+    );
 
-      // Json per la commessa
-      final dataMaterial = json.encode(
-        {
-          "data": {
-            "type": "woeqpt",
-            "attributes": {
-              "UOwner": null,
-              "modifyDate": null,
-              "directEqpt": true,
-              "persoId": null,
-              "referEqpt": true
+    // Json per la commessa
+    final dataMaterial = json.encode(
+      {
+        "data": {
+          "type": "woeqpt",
+          "attributes": {
+            "UOwner": null,
+            "modifyDate": null,
+            "directEqpt": true,
+            "persoId": null,
+            "referEqpt": true
+          },
+          "relationships": {
+            "WO": {
+              "data": {"type": "wo", "id": task.id}
             },
-            "relationships": {
-              "WO": {
-                "data": {"type": "wo", "id": task.id}
-              },
-              "eqpt": {
-                "data": {"type": "material", "id": task.commessa.id}
-              }
+            "eqpt": {
+              "data": {"type": "material", "id": task.commessa.id}
             }
           }
-        },
-      );
+        }
+      },
+    );
 
-      if (task.cliente.id != null) {
+    if (task.cliente.id != null) {
+      try {
         // Chiamata per creare il legame con WO-cliente
         final responseBox = await http.post(
           urlEquipment,
@@ -400,9 +412,20 @@ class Tasks with ChangeNotifier {
         );
 
         print('Stato box: ${responseBox.statusCode}');
-      }
 
-      if (task.commessa.id != null) {
+        if (responseBox.statusCode >= 400) {
+          throw HttpException(
+            json.decode(responseBox.body)['errors'][0]['title'].toString(),
+          );
+        }
+      } catch (error) {
+        print(error);
+        throw error;
+      }
+    }
+
+    if (task.commessa.id != null) {
+      try {
         // Chiamata per creare il legame con WO-commessa
         final responseMaterial = await http.post(
           urlEquipment,
@@ -411,42 +434,49 @@ class Tasks with ChangeNotifier {
         );
 
         print('Stato material: ${responseMaterial.statusCode}');
+
+        if (responseMaterial.statusCode >= 400) {
+          throw HttpException(
+            json.decode(responseMaterial.body)['errors'][0]['title'].toString(),
+          );
+        }
+      } catch (error) {
+        print(error);
+        throw error;
       }
-
-      final newTask = Task(
-        code: task.code,
-        description: task.description,
-        statusCode: task.statusCode,
-        priority: task.priority,
-        actionType: task.actionType,
-        note: task.note,
-        cliente: task.cliente,
-        commessa: task.commessa,
-        dataInizio: task.dataInizio,
-        dataFine: task.dataFine,
-        id: json.decode(response.body)['data']['id'],
-      );
-
-      //print(json.decode(response.body)['data']['id']);
-
-      _tasks.insert(index, newTask);
-      notifyListeners();
-    } catch (error) {
-      print(error);
-      throw error;
     }
+
+    final newTask = Task(
+      code: task.code,
+      description: task.description,
+      statusCode: task.statusCode,
+      priority: task.priority,
+      actionType: task.actionType,
+      note: task.note,
+      cliente: task.cliente,
+      commessa: task.commessa,
+      dataInizio: task.dataInizio,
+      dataFine: task.dataFine,
+      id: task.id,
+    );
+
+    //print(json.decode(response.body)['data']['id']);
+
+    _tasks.insert(index, newTask);
+    notifyListeners();
   }
 
   Future<void> updateTask(String id, Task initTask, Task newTask) async {
     final woIndex = _tasks.indexWhere((wo) => wo.id == id);
 
-    final urlWo = Uri.parse('$urlAmbiente/api/entities/v1/wo/$id');
-    final urlEquipment = Uri.parse('$urlAmbiente/api/entities/v1/woeqpt');
-
+    // Preparo l'header
     Map<String, String> headers = {
       "X-CS-Access-Token": authToken,
       "Content-Type": "application/vnd.api+json",
     };
+
+    final urlWo = Uri.parse('$urlAmbiente/api/entities/v1/wo/$id');
+    final urlEquipment = Uri.parse('$urlAmbiente/api/entities/v1/woeqpt');
 
     final dataWO = json.encode(
       {
@@ -455,7 +485,14 @@ class Tasks with ChangeNotifier {
           'attributes': {
             'code': newTask.code,
             'description': newTask.description,
-            'statusCode': newTask.statusCode
+            'statusCode': newTask.statusCode,
+            'workPriority': newTask.priority,
+            'xtraTxt10': newTask.note,
+            'WOBegin':
+                "${newTask.dataInizio.toIso8601String().substring(0, 23)}+01:00",
+            'WOEnd':
+                "${newTask.dataFine.toIso8601String().substring(0, 23)}+01:00",
+            'expTime': (newTask.stima.inMinutes / 60)
           },
           'relationships': {
             "actionType": {
@@ -506,7 +543,13 @@ class Tasks with ChangeNotifier {
           headers: headers,
         );
 
-        print('Stato wo: ${response.statusCode}');
+        print('Stato update wo: ${response.statusCode}');
+
+        if (response.statusCode >= 400) {
+          throw HttpException(
+            json.decode(response.body)['errors'][0]['title'].toString(),
+          );
+        }
 
         // Se il nuovo WO ha un box non nullo
         if (newTask.cliente.id != null) {
@@ -542,6 +585,14 @@ class Tasks with ChangeNotifier {
             );
 
             print('Stato box update: ${responseEquipment.statusCode}');
+
+            if (response.statusCode >= 400) {
+              throw HttpException(
+                json
+                    .decode(responseEquipment.body)['errors'][0]['title']
+                    .toString(),
+              );
+            }
           }
           // Se il nuovo WO ha un box associato e il WO precedente non aveva un box associato
           if (newTask.cliente.id != null && initTask.cliente.id == null) {
@@ -552,6 +603,14 @@ class Tasks with ChangeNotifier {
             );
 
             print('Stato box insert: ${responseEquipment.statusCode}');
+
+            if (response.statusCode >= 400) {
+              throw HttpException(
+                json
+                    .decode(responseEquipment.body)['errors'][0]['title']
+                    .toString(),
+              );
+            }
           }
         } else {
           final url =
@@ -565,6 +624,12 @@ class Tasks with ChangeNotifier {
           var woeqptData =
               json.decode(responseWoEqpt.body) as Map<String, dynamic>;
           //print(woeqptData);
+
+          if (response.statusCode >= 400) {
+            throw HttpException(
+              json.decode(responseWoEqpt.body)['errors'][0]['title'].toString(),
+            );
+          }
 
           woeqptData['data'].forEach(
             (woeqpt) async {
@@ -580,6 +645,14 @@ class Tasks with ChangeNotifier {
                   headers: headers,
                 );
                 print('Stato delete: ${responseDeleteWoEqpt.statusCode}');
+
+                if (response.statusCode >= 400) {
+                  throw HttpException(
+                    json
+                        .decode(responseDeleteWoEqpt.body)['errors'][0]['title']
+                        .toString(),
+                  );
+                }
               }
             },
           );
@@ -592,6 +665,72 @@ class Tasks with ChangeNotifier {
       }
     } else {
       print('...');
+    }
+  }
+
+  Future<void> passaggioStatoTask(
+      Task task, String statoNew, String statoOdl) async {
+    print('Funzione passaggioStatoTask');
+
+    String transizioneId;
+
+    // Preparo l'header
+    Map<String, String> headers = {
+      "X-CS-Access-Token": authToken,
+      "Content-Type": "application/vnd.api+json",
+    };
+
+    final url = Uri.parse(
+        '$urlAmbiente/api/entities/v1/wo/${task.id}/workflow-transitions');
+
+    if (statoNew == 'INPROGRESS' && statoOdl == 'AWAITINGREAL') {
+      transizioneId =
+          '18513f08e77-2075c:com.carl.xnet.system.status.TransitionParameters';
+    }
+    if (statoNew == 'INPROGRESS' && statoOdl == 'PAUSE') {
+      transizioneId =
+          '18513f08e77-20756:com.carl.xnet.system.status.TransitionParameters';
+    }
+    if (statoNew == 'PAUSE') {
+      transizioneId =
+          '18513f08e77-20762:com.carl.xnet.system.status.TransitionParameters';
+    } else if (statoNew == 'CONCLUSIONE') {
+      transizioneId =
+          '18513f08e77-20763:com.carl.xnet.system.status.TransitionParameters';
+    }
+
+    final data = json.encode(
+      {
+        "data": {"id": transizioneId, "type": "workflow-transitions"}
+      },
+    );
+
+    print(data);
+
+    //print(url);
+    try {
+      // Chiamata per effettuare il passaggio di stato
+      final response = await http.post(
+        url,
+        body: data,
+        headers: headers,
+      );
+
+      print(
+          'Stato passaggio di stato: ${json.decode(response.statusCode.toString())}');
+
+      if (response.statusCode != 200) {
+        throw HttpException(
+          json.decode(response.body)['errors'][0]['title'].toString(),
+        );
+      }
+      task.statusCode =
+          json.decode(response.body)['data']['attributes']['nextStepCode'];
+
+      notifyListeners();
+    } catch (error) {
+      print(error);
+      throw error;
     }
   }
 }

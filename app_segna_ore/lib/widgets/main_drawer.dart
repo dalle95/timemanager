@@ -26,7 +26,7 @@ class MainDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final actorName = Provider.of<Auth>(context, listen: false).actorName;
+    final actorName = Provider.of<Auth>(context, listen: false).user.nome;
 
     return Drawer(
       child: Column(

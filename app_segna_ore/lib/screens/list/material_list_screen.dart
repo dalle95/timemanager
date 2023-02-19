@@ -62,6 +62,7 @@ class MaterialListScreen extends StatelessWidget {
           },
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: function == 'search'
           ? FloatingActionButton(
               child: const Icon(Icons.disabled_by_default_rounded),

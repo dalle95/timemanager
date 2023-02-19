@@ -55,6 +55,7 @@ class _TaskItemState extends State<TaskItem> {
                 eqptType: widget.task.commessa.eqptType,
                 statusCode: widget.task.commessa.statusCode,
               ),
+              'xtraTxt10': widget.task.note,
               'workflow': [],
             },
           );
@@ -83,7 +84,8 @@ class _TaskItemState extends State<TaskItem> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(widget.task.code),
+                Text(
+                    'Codice: ${widget.task.code} Stato: ${widget.task.statusCode}'),
                 Text('Commessa: ${widget.task.commessa.description}'),
               ],
             ),
