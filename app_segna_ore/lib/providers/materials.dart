@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:app_segna_ore/providers/actor.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
@@ -34,10 +35,11 @@ class Materials with ChangeNotifier {
 
   // Funzione per estrarre le nature tramite richiesta get
   Future<void> fetchAndSetMaterials([String cliente]) async {
+    print('Funzione fetchAndSetMaterials');
     final url = Uri.parse(
       cliente != null
-          ? '$urlAmbiente/api/entities/v1/material?filter[eqptType]=COMMESSA&filter[code][LIKE]=$cliente'
-          : '$urlAmbiente/api/entities/v1/material?filter[eqptType]=COMMESSA',
+          ? '$urlAmbiente/api/entities/v1/material?include=supervisor&filter[eqptType]=COMMESSA&filter[code][LIKE]=$cliente'
+          : '$urlAmbiente/api/entities/v1/material?include=supervisor&filter[eqptType]=COMMESSA',
     );
 
     try {
@@ -54,22 +56,52 @@ class Materials with ChangeNotifier {
         return;
       }
 
-      extractedData['data'].forEach(
-        (material) {
-          if (material['attributes']['statusCode'] == 'ATTESA_ORDINE' ||
-              material['attributes']['statusCode'] == 'APERTA') {
-            loadedMaterials.add(
-              Material(
-                id: material['id'],
-                code: material['attributes']['code'],
-                description: material['attributes']['description'],
-                eqptType: material['attributes']['eqptType'],
-                statusCode: material['attributes']['statusCode'],
-              ),
-            );
-          }
-        },
+      // Definisco il responsabile nullo
+      Actor responsabile = Actor(
+        id: null,
+        code: '',
+        nome: '',
       );
+
+      for (var material in extractedData['data']) {
+        if (material['attributes']['statusCode'] == 'ATTESA_ORDINE' ||
+            material['attributes']['statusCode'] == 'APERTA') {
+          // Definisco il responsabile nullo
+          responsabile = Actor(
+            id: null,
+            code: '',
+            nome: '',
+          );
+
+          // Controllo che il supervisor non sia nullo
+          if (material['relationships']['supervisor']['data'] != null) {
+            // Recupero il supervisor associato al materiale
+            for (var record in extractedData['included']) {
+              // Controllo il supervisor collegato
+              if (record['id'] ==
+                  material['relationships']['supervisor']['data']['id']) {
+                // Definizione Actor associato
+                responsabile = Actor(
+                    id: record['id'],
+                    code: record['attributes']['code'],
+                    nome: record['attributes']['fullName'] ?? '');
+              }
+            }
+          }
+
+          loadedMaterials.add(
+            Material(
+              id: material['id'],
+              code: material['attributes']['code'],
+              description: material['attributes']['description'],
+              eqptType: material['attributes']['eqptType'],
+              statusCode: material['attributes']['statusCode'],
+              responsabile: responsabile,
+            ),
+          );
+        }
+      }
+
       // Ordino la lista in base al codice del Material
       loadedMaterials.sort((a, b) => a.code.compareTo(b.code));
 
@@ -77,6 +109,7 @@ class Materials with ChangeNotifier {
       _materials = loadedMaterials;
       notifyListeners();
     } catch (error) {
+      print(error);
       throw error;
     }
   }

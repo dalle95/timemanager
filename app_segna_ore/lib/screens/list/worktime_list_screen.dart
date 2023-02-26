@@ -29,10 +29,11 @@ class WorkTimeListScreen extends StatelessWidget {
         woID = functionData['filter']['wo_id'];
         filtro = {'wo_id': woID};
       }
-    } else {
-      final DateTime mese = DateTime.now();
-      final String periodoRiferimento = DateFormat("MM/yyyy").format(mese);
-      filtro = {'periodoCompetenza': periodoRiferimento};
+    } else if (functionData.containsKey("periodoCompetenza")) {
+      filtro = {
+        'giornoCompetenza': DateFormat("yyyy-MM-dd")
+            .format(DateTime.parse(functionData['periodoCompetenza']))
+      };
     }
 
     return Scaffold(
@@ -82,7 +83,7 @@ class WorkTimeListScreen extends StatelessWidget {
         onPressed: () {
           Navigator.of(context).pushNamed(
             WorkTimeDetailScreen.routeName,
-            arguments: woID != null ? {'wo_id': woID} : null,
+            arguments: filtro ?? null,
           );
         },
         child: const Icon(Icons.add),

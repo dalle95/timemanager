@@ -48,7 +48,7 @@ class _BoxItemState extends State<BoxItem> {
           padding: const EdgeInsets.all(5.0),
           child: ListTile(
             leading: Icon(
-              Icons.location_city,
+              Icons.account_circle,
               color: Theme.of(context).colorScheme.secondary,
               size: 40,
             ),

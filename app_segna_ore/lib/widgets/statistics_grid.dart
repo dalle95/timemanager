@@ -31,7 +31,7 @@ class StatisticsGrid extends StatelessWidget {
           indexDay = indexDay.add(const Duration(days: 1))) {
         if (indexDay.weekday < 6) {
           giorniLavorativi.add({
-            "numeroGiorno": indexDay.day.toString(),
+            "numeroGiorno": indexDay.toIso8601String(),
             "oreRegistrate":
                 Provider.of<WorkTimes>(context).oreSegnate(indexDay).toString(),
           });

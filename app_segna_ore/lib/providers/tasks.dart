@@ -291,44 +291,114 @@ class Tasks with ChangeNotifier {
       "Content-Type": "application/vnd.api+json",
     };
 
+    final url =
+        Uri.parse('$urlAmbiente/api/entities/v1/wo?filter[code][LIKE]=TM.');
+    int numero = 0;
+
+    String codiceWO;
+
+    try {
+      // Chiamata per contare i WO
+      final response = await http.get(
+        url,
+        headers: headers,
+      );
+      //print(response.body);
+
+      print('Stato GET wo: ${json.decode(response.statusCode.toString())}');
+
+      if (response.statusCode >= 400) {
+        throw HttpException(
+          json.decode(response.body)['errors'][0]['title'].toString(),
+        );
+      }
+
+      // Estrazione Tasks
+      var extractedData = json.decode(response.body) as Map<String, dynamic>;
+
+      for (var wo in extractedData['data']) {
+        numero++;
+      }
+    } catch (error) {
+      //print(error);
+      throw error;
+    }
+
+    String numeroStringa = '0000$numero';
+    codiceWO = 'TM.${numeroStringa.substring(numeroStringa.length - 5)}';
+
+    task.code = codiceWO;
+
     final urlWo = Uri.parse('$urlAmbiente/api/entities/v1/wo');
     final urlEquipment = Uri.parse('$urlAmbiente/api/entities/v1/woeqpt');
 
     final dataWO = json.encode(
-      {
-        'data': {
-          'type': 'wo',
-          'attributes': {
-            'code': task.code,
-            'description': task.description,
-            'statusCode': task.statusCode,
-            'workPriority': task.priority,
-            'xtraTxt10': task.note,
-            'WOBegin':
-                "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
-            'WOEnd':
-                "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
-            'expTime': (task.stima.inMinutes / 60)
-          },
-          'relationships': {
-            "actionType": {
-              "data": {
-                "type": "actiontype",
-                "id": task.actionType.id,
+      task.commessa.responsabile.id == null
+          ? {
+              'data': {
+                'type': 'wo',
+                'attributes': {
+                  'code': task.code,
+                  'description': task.description,
+                  'statusCode': task.statusCode,
+                  'workPriority': task.priority,
+                  'xtraTxt10': task.note,
+                  'WOBegin':
+                      "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
+                  'WOEnd':
+                      "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
+                  'expTime': (task.stima.inMinutes / 60)
+                },
+                'relationships': {
+                  "actionType": {
+                    "data": {
+                      "type": "actiontype",
+                      "id": task.actionType.id,
+                    }
+                  },
+                  // "costCenter": {
+                  //   "data": {
+                  //     "type": "costcenter",
+                  //     "id": "177fed5ef2f-2ab4",
+                  //   }
+                  // }
+                }
+              }
+            }
+          : {
+              'data': {
+                'type': 'wo',
+                'attributes': {
+                  'code': task.code,
+                  'description': task.description,
+                  'statusCode': task.statusCode,
+                  'workPriority': task.priority,
+                  'xtraTxt10': task.note,
+                  'WOBegin':
+                      "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
+                  'WOEnd':
+                      "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
+                  'expTime': (task.stima.inMinutes / 60)
+                },
+                'relationships': {
+                  "actionType": {
+                    "data": {
+                      "type": "actiontype",
+                      "id": task.actionType.id,
+                    }
+                  },
+                  "supervisor": {
+                    "data": {
+                      "type": "actor",
+                      "id": task.commessa.responsabile.id,
+                    }
+                  }
+                }
               }
             },
-            // "costCenter": {
-            //   "data": {
-            //     "type": "costcenter",
-            //     "id": "177fed5ef2f-2ab4",
-            //   }
-            // }
-          }
-        }
-      },
     );
 
-    print(dataWO);
+    //print(dataWO);
 
     //print(url);
     try {
@@ -338,7 +408,7 @@ class Tasks with ChangeNotifier {
         body: dataWO,
         headers: headers,
       );
-      print(response.body);
+      //print(response.body);
 
       print('Stato wo: ${json.decode(response.statusCode.toString())}');
 
@@ -719,7 +789,7 @@ class Tasks with ChangeNotifier {
       print(
           'Stato passaggio di stato: ${json.decode(response.statusCode.toString())}');
 
-      if (response.statusCode != 200) {
+      if (response.statusCode >= 400) {
         throw HttpException(
           json.decode(response.body)['errors'][0]['title'].toString(),
         );

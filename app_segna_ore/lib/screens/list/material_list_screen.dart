@@ -73,7 +73,8 @@ class MaterialListScreen extends StatelessWidget {
                     'code': '',
                     'description': '',
                     'eqptType': '',
-                    'statusCode': ''
+                    'statusCode': '',
+                    'responsabile': {'id': null, 'code': '', 'nome': ''}
                   },
                 );
               })

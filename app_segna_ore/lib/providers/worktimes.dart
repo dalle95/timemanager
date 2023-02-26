@@ -251,17 +251,30 @@ class WorkTimes with ChangeNotifier {
 
     String endpoint;
 
-    if (filtro.containsKey("wo_id")) {
-      String wo = filtro['wo_id'];
+    print(filtro);
 
-      endpoint =
-          '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note,&include=technician,commessa,WO&filter[technician.code]=${user.code}&filter[WO.id]=$wo&sort=-occupationDate';
-    }
-    if (filtro.containsKey("periodoCompetenza")) {
-      String periodoCompetenza = filtro['periodoCompetenza'];
+    if (filtro != null) {
+      if (filtro.containsKey("wo_id")) {
+        String wo = filtro['wo_id'];
 
+        endpoint =
+            '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note&include=technician,commessa,WO&filter[technician.code]=${user.code}&filter[WO.id]=$wo&sort=-occupationDate';
+      }
+      if (filtro.containsKey("periodoCompetenza")) {
+        String periodoCompetenza = filtro['periodoCompetenza'];
+
+        endpoint =
+            '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note&include=technician,commessa,WO&filter[technician.code]=${user.code}&filter[occupationDate][LIKE]=$periodoCompetenza&sort=-occupationDate';
+      }
+      if (filtro.containsKey("giornoCompetenza")) {
+        String periodoCompetenza = filtro['giornoCompetenza'];
+
+        endpoint =
+            '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note&include=technician,commessa,WO&filter[technician.code]=${user.code}&filter[occupationDate][LIKE]=$periodoCompetenza&sort=-occupationDate';
+      }
+    } else {
       endpoint =
-          '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note,&include=technician,commessa,WO&filter[technician.code]=${user.code}&sort=-occupationDate';
+          '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note&include=technician,commessa,WO&filter[technician.code]=${user.code}&sort=-occupationDate';
     }
 
     // Definizione del link della chiamata
@@ -395,14 +408,29 @@ class WorkTimes with ChangeNotifier {
           }
         }
 
+        print(DateTime(
+          DateTime.parse(occupation['attributes']['occupationDate']).year,
+          DateTime.parse(occupation['attributes']['occupationDate']).month,
+          DateTime.parse(occupation['attributes']['occupationDate']).day,
+          12,
+          0,
+          0,
+        ).toString());
+
         // Aggiunta WorkTime alla lista
         loadedWorkTimes.add(
           WorkTime(
             id: occupation['id'],
             attore: attore,
             note: occupation['attributes']['note'] ?? '',
-            data: DateTime.parse(occupation['attributes']['occupationDate'])
-                .add(const Duration(hours: 1)),
+            data: DateTime(
+              DateTime.parse(occupation['attributes']['occupationDate']).year,
+              DateTime.parse(occupation['attributes']['occupationDate']).month,
+              DateTime.parse(occupation['attributes']['occupationDate']).day,
+              12,
+              0,
+              0,
+            ),
             tempoFatturato: Duration(
                     minutes:
                         (occupation['attributes']['duration'] * 60).toInt()) ??
@@ -455,7 +483,7 @@ class WorkTimes with ChangeNotifier {
                 'UOwner': user.code,
                 'note': workTime.note,
                 'occupationDate':
-                    "${workTime.data.toIso8601String().substring(0, 23)}+01:00",
+                    "${DateTime(workTime.data.year, workTime.data.month, workTime.data.day, 12).toIso8601String().substring(0, 23)}+01:00",
                 'duration': (workTime.tempoFatturato.inMinutes / 60),
               },
               'relationships': {
@@ -487,7 +515,7 @@ class WorkTimes with ChangeNotifier {
                 'UOwner': user.code,
                 'note': workTime.note,
                 'occupationDate':
-                    "${workTime.data.toIso8601String().substring(0, 23)}+01:00",
+                    "${DateTime(workTime.data.year, workTime.data.month, workTime.data.day, 12).toIso8601String().substring(0, 23)}+01:00",
                 'duration': (workTime.tempoFatturato.inMinutes / 60),
               },
               'relationships': {
@@ -562,7 +590,7 @@ class WorkTimes with ChangeNotifier {
                   'UOwner': user.code,
                   'note': newWorkTime.note,
                   'occupationDate':
-                      "${newWorkTime.data.toIso8601String().substring(0, 23)}+01:00",
+                      "${DateTime(newWorkTime.data.year, newWorkTime.data.month, newWorkTime.data.day, 12).toIso8601String().substring(0, 23)}+01:00",
                   'duration': (newWorkTime.tempoFatturato.inMinutes / 60),
                 },
                 'relationships': {
@@ -594,7 +622,7 @@ class WorkTimes with ChangeNotifier {
                   'UOwner': user.code,
                   'note': newWorkTime.note,
                   'occupationDate':
-                      "${newWorkTime.data.toIso8601String().substring(0, 23)}+01:00",
+                      "${DateTime(newWorkTime.data.year, newWorkTime.data.month, newWorkTime.data.day, 12).toIso8601String().substring(0, 23)}+01:00",
                   'duration': (newWorkTime.tempoFatturato.inMinutes / 60),
                 },
                 'relationships': {
@@ -629,11 +657,15 @@ class WorkTimes with ChangeNotifier {
           headers: headers,
         );
 
-        print(response.body);
-
         print(
           'Stato occupation: ${json.decode(response.statusCode.toString())}',
         );
+
+        if (response.statusCode >= 400) {
+          throw HttpException(
+            json.decode(response.body)['errors'][0]['title'].toString(),
+          );
+        }
 
         _workTimes[workTimeIndex] = newWorkTime;
 

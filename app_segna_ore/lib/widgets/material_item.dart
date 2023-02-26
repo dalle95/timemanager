@@ -34,6 +34,11 @@ class _MaterialItemState extends State<MaterialItem> {
               'description': widget.material.description,
               'eqptType': widget.material.eqptType,
               'statusCode': widget.material.statusCode,
+              'responsabile': {
+                'id': widget.material.responsabile.id,
+                'code': widget.material.responsabile.code,
+                'nome': widget.material.responsabile.nome
+              }
             },
           );
         }
@@ -48,7 +53,7 @@ class _MaterialItemState extends State<MaterialItem> {
           padding: const EdgeInsets.all(5.0),
           child: ListTile(
             leading: Icon(
-              Icons.location_city,
+              Icons.content_paste,
               color: Theme.of(context).colorScheme.secondary,
               size: 40,
             ),

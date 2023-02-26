@@ -35,10 +35,11 @@ dependencies:
   intl: ^0.17.0
   http: ^0.13.5
   shared_preferences: ^2.0.15
+  url_launcher: ^6.1.9
   flutter_picker:
     git: https://github.com/yangyxd/flutter_picker.git
   flutter_localizations:
-    sdk: flutter 
+    sdk: flutter
 
 
   # The following adds the Cupertino Icons font to your application.

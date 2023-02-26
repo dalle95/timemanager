@@ -133,6 +133,11 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
           _initWorkTime.note = _editedWorkTime.task.description;
         }
 
+        if (arguments.containsKey("giornoCompetenza")) {
+          final giorno = DateTime.parse(arguments['giornoCompetenza']);
+          _initWorkTime.data = giorno;
+        }
+
         if (arguments.containsKey("worktime_id")) {
           final id = arguments['worktime_id'];
 

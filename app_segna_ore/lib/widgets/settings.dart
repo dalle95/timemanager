@@ -1,7 +1,9 @@
 import 'package:app_segna_ore/providers/auth.dart';
 import 'package:app_segna_ore/widgets/flat_button.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Settings extends StatelessWidget {
   @override
@@ -32,7 +34,79 @@ class Settings extends StatelessWidget {
       );
     }
 
+    Future<void> _mostraMessaggioLogOut() async {
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Disconnettersi dall\'applicazione?'),
+          actions: [
+            FlatButton(
+              () {
+                Navigator.of(context).pop();
+                Provider.of<Auth>(context, listen: false).logoout();
+              },
+              const Text('Conferma'),
+            ),
+            FlatButton(
+              () {
+                Navigator.of(context).pop();
+              },
+              const Text('Annulla'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    Future<void> _mostraMessaggioInfoApp() async {
+      TextStyle linkStyle = TextStyle(color: Colors.blue);
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Informazioni'),
+          content: RichText(
+            text: TextSpan(
+              children: [
+                const TextSpan(
+                  style: TextStyle(color: Colors.black, fontSize: 20),
+                  text: "TimeManager versione: 1\n\n",
+                ),
+                const TextSpan(
+                  style: TextStyle(color: Colors.black, fontSize: 15),
+                  text: "Per maggiori informazioni visita il ",
+                ),
+                TextSpan(
+                  style: linkStyle,
+                  text: "sito ufficiale",
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () async {
+                      const url =
+                          'https://sites.google.com/injenia.it/timemanager/versioni';
+                      // Apertura link nel browser di default
+                      await launch(
+                        url,
+                      );
+                    },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            FlatButton(
+              () {
+                Navigator.of(context).pop();
+              },
+              const Text('Conferma'),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
+      height: double.infinity,
+      width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -46,51 +120,57 @@ class Settings extends StatelessWidget {
           stops: const [0, 1],
         ),
       ),
-      child: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          Container(
-            alignment: Alignment.bottomLeft,
-            padding: const EdgeInsets.all(20),
-            width: double.infinity,
-            height: 120,
-            child: Text(
-              'Altro',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.background,
-                fontSize: 30,
-              ),
-            ),
-          ),
-          buildListTile(
-            Icons.logout,
-            'Logout',
-            () async {
-              await showDialog(
-                context: context,
-                builder: (ctx) => AlertDialog(
-                  title: const Text('Logout'),
-                  content: const Text('Disconnettersi dall\'applicazione?'),
-                  actions: [
-                    FlatButton(
-                      () {
-                        Navigator.of(context).pop();
-                        Provider.of<Auth>(context, listen: false).logoout();
-                      },
-                      const Text('Conferma'),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 20),
+        child: SizedBox(
+          height: 200,
+          width: double.infinity,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 1,
+                // height: 100,
+                child: Container(
+                  alignment: Alignment.bottomLeft,
+                  padding: const EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    top: 20,
+                  ),
+                  width: double.infinity,
+                  child: Text(
+                    'Altro',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.background,
+                      fontSize: 30,
                     ),
-                    FlatButton(
-                      () {
-                        Navigator.of(context).pop();
-                      },
-                      const Text('Annulla'),
-                    ),
-                  ],
+                  ),
                 ),
-              );
-            },
-          )
-        ],
+              ),
+              Expanded(
+                flex: 8,
+                child: ListView(padding: const EdgeInsets.all(20), children: [
+                  buildListTile(
+                    Icons.info,
+                    'Informazioni App',
+                    () {
+                      _mostraMessaggioInfoApp();
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  buildListTile(
+                    Icons.logout,
+                    'Logout',
+                    () {
+                      _mostraMessaggioLogOut();
+                    },
+                  ),
+                ]),
+              )
+            ],
+          ),
+        ),
       ),
     );
   }

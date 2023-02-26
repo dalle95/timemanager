@@ -52,7 +52,7 @@ class _StatisticsState extends State<Statistics> {
   @override
   void initState() {
     _meseStringa = "${_nomeMese(_meseInt)}, ${_annoInt.toString()}";
-    _periodoRiferimento = DateFormat("MM/yyyy").format(_mese);
+    _periodoRiferimento = DateFormat("yyyy-MM").format(_mese);
     super.initState();
   }
 
@@ -63,7 +63,7 @@ class _StatisticsState extends State<Statistics> {
         _meseInt = DateTime(_mese.year, _mese.month, 1).month;
         _annoInt = DateTime(_mese.year, _mese.month, 1).year;
         _meseStringa = "${_nomeMese(_meseInt)}, ${_annoInt.toString()}";
-        _periodoRiferimento = DateFormat("MM/yyyy").format(_mese);
+        _periodoRiferimento = DateFormat("yyyy-MM").format(_mese);
       });
     } else {
       setState(() {
@@ -71,13 +71,14 @@ class _StatisticsState extends State<Statistics> {
         _meseInt = DateTime(_mese.year, _mese.month, 1).month;
         _annoInt = DateTime(_mese.year, _mese.month, 1).year;
         _meseStringa = "${_nomeMese(_meseInt)}, ${_annoInt.toString()}";
-        _periodoRiferimento = DateFormat("MM/yyyy").format(_mese);
+        _periodoRiferimento = DateFormat("yyyy-MM").format(_mese);
       });
     }
   }
 
   Future<void> _refreshWorkTimes(
       BuildContext context, String periodoRiferimento) async {
+    print(periodoRiferimento);
     Map<String, String> filtro = {'periodoCompetenza': periodoRiferimento};
     await Provider.of<WorkTimes>(context, listen: false)
         .fetchAndSetFilteredWorkTimes(filtro);

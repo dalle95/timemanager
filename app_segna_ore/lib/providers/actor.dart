@@ -10,6 +10,6 @@ class Actor {
     @required this.id,
     @required this.code,
     @required this.nome,
-    @required this.tecnicoID,
+    this.tecnicoID,
   });
 }

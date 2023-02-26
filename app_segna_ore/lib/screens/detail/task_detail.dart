@@ -1,8 +1,10 @@
-import '../../models/http_exception.dart';
+import 'package:app_segna_ore/providers/actor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/flutter_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+
+import '../../models/http_exception.dart';
 
 import '../../providers/actiontype.dart';
 import '../../providers/task.dart';
@@ -209,12 +211,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     if (result != null) {
       setState(() {
         _commessa = carl.Material(
-          id: result['id'],
-          code: result['code'],
-          description: result['description'] ?? '',
-          eqptType: result['eqptType'] ?? '',
-          statusCode: result['statusCode'],
-        );
+            id: result['id'],
+            code: result['code'],
+            description: result['description'] ?? '',
+            eqptType: result['eqptType'] ?? '',
+            statusCode: result['statusCode'],
+            responsabile: Actor(
+              id: result['responsabile']['id'],
+              code: result['responsabile']['code'],
+              nome: result['responsabile']['nome'],
+            ));
       });
     }
   }
@@ -544,6 +550,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     );
 
     _editedTask.code = _initTask.code;
+    _editedTask.description = _initTask.description;
     _editedTask.actionType = _actionType;
     _editedTask.cliente = _cliente;
     _editedTask.cliente = _cliente;
@@ -660,35 +667,38 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   ),
                 ),
               ),
-              TextFormField(
-                initialValue: _initTask.code ?? '',
-                decoration: const InputDecoration(labelText: 'Codice'),
-                textInputAction: TextInputAction.next,
-                onChanged: (value) {
-                  setState(() {
-                    _initTask.code = value;
-                  });
-                },
-                onSaved: (value) {
-                  _editedTask = Task(
-                    id: _editedTask.id,
-                    code: value,
-                    description: _editedTask.description,
-                    statusCode: _editedTask.statusCode,
-                    priority: _editedTask.priority,
-                    cliente: _cliente,
-                    commessa: _commessa,
-                    stima: _editedTask.stima,
-                    note: _editedTask.note,
-                  );
-                },
-                validator: (value) {
-                  if (value.isEmpty) {
-                    return 'Inserisci il codice.';
-                  }
-                  return null;
-                },
-              ),
+              _initTask.id != null
+                  ? TextFormField(
+                      initialValue: _initTask.code ?? '',
+                      decoration: const InputDecoration(labelText: 'Codice'),
+                      readOnly: true,
+                      textInputAction: TextInputAction.next,
+                      onChanged: (value) {
+                        setState(() {
+                          _initTask.code = value;
+                        });
+                      },
+                      onSaved: (value) {
+                        _editedTask = Task(
+                          id: _editedTask.id,
+                          code: value,
+                          description: _editedTask.description,
+                          statusCode: _editedTask.statusCode,
+                          priority: _editedTask.priority,
+                          cliente: _cliente,
+                          commessa: _commessa,
+                          stima: _editedTask.stima,
+                          note: _editedTask.note,
+                        );
+                      },
+                      validator: (value) {
+                        if (value.isEmpty) {
+                          return 'Inserisci il codice.';
+                        }
+                        return null;
+                      },
+                    )
+                  : SizedBox(),
               TextFormField(
                 initialValue: _initTask.description ?? '',
                 decoration: const InputDecoration(labelText: 'Titolo'),
