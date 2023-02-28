@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:app_segna_ore/models/http_wooccupationdateexception.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -408,15 +409,6 @@ class WorkTimes with ChangeNotifier {
           }
         }
 
-        print(DateTime(
-          DateTime.parse(occupation['attributes']['occupationDate']).year,
-          DateTime.parse(occupation['attributes']['occupationDate']).month,
-          DateTime.parse(occupation['attributes']['occupationDate']).day,
-          12,
-          0,
-          0,
-        ).toString());
-
         // Aggiunta WorkTime alla lista
         loadedWorkTimes.add(
           WorkTime(
@@ -426,7 +418,9 @@ class WorkTimes with ChangeNotifier {
             data: DateTime(
               DateTime.parse(occupation['attributes']['occupationDate']).year,
               DateTime.parse(occupation['attributes']['occupationDate']).month,
-              DateTime.parse(occupation['attributes']['occupationDate']).day,
+              DateTime.parse(occupation['attributes']['occupationDate'])
+                  .add(const Duration(hours: 2))
+                  .day, // Aggiungo 2 ore per essere sicuro di prendere il giorno giusto
               12,
               0,
               0,
@@ -552,9 +546,18 @@ class WorkTimes with ChangeNotifier {
       print('Stato occupation: ${json.decode(response.statusCode.toString())}');
 
       if (response.statusCode >= 400) {
-        throw HttpException(
-          json.decode(response.body)['errors'][0]['title'].toString(),
-        );
+        if (json.decode(response.body)['errors'][0]['code'] ==
+            'com.carl.xnet.works.backend.exceptions.WOOccupationDateExceptions') {
+          throw HttpWOOccupationDateException(
+            json.decode(response.body)['errors'][0]['title'].toString(),
+          );
+        } else {
+          throw HttpException(
+            json.decode(response.body)['errors'][0]['title'].toString(),
+          );
+        }
+        //com.carl.xnet.works.backend.exceptions.WOOccupationDateExceptions
+
       }
 
       workTime.id = json.decode(response.body)['data']['id'];

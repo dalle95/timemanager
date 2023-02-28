@@ -11,17 +11,15 @@ class WorkTime with ChangeNotifier {
   Actor attore;
   Task task;
   carl.Material commessa;
-  Duration tempoLavorato;
   Duration tempoFatturato;
   String note;
 
   WorkTime({
     @required this.id,
     @required this.data,
-    @required this.attore,
+    this.attore,
     @required this.task,
     @required this.commessa,
-    @required this.tempoLavorato,
     @required this.tempoFatturato,
     @required this.note,
   });

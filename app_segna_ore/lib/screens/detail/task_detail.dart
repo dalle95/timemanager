@@ -588,8 +588,8 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         _showErrorDialog(error.toString());
       } catch (error) {
         // Errore generico
-        print(error.runtimeType);
-        _showErrorDialog(error.toString());
+        print(error);
+        _showErrorDialog('Qualcosa è andato storto.');
       }
     }
     setState(() {
@@ -600,12 +600,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     if (_tipologia == tipologia.insert) {
       scaffold.hideCurrentSnackBar();
       scaffold.showSnackBar(
-        SnackBar(
-          content: const Text('Task inserito!'),
-          duration: const Duration(
+        const SnackBar(
+          content: Text('Task inserito!'),
+          duration: Duration(
             seconds: 2,
           ),
-          action: SnackBarAction(label: 'Annulla', onPressed: () {}),
+          //action: SnackBarAction(label: 'Annulla', onPressed: () {}),
         ),
       );
     } else if (_tipologia == tipologia.update) {
@@ -625,7 +625,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dettaglio del WO'),
+        title: const Text('Dettaglio ticket'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           _initTask.id != null

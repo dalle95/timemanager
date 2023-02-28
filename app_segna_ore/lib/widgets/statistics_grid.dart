@@ -1,11 +1,9 @@
-import 'package:app_segna_ore/providers/worktimes.dart';
-import 'package:app_segna_ore/widgets/statistics_item.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/foundation/key.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
 import 'package:provider/provider.dart';
+
+import '../providers/worktimes.dart';
+import '../widgets/statistics_item.dart';
 
 class StatisticsGrid extends StatelessWidget {
   final DateTime mese;
@@ -44,7 +42,7 @@ class StatisticsGrid extends StatelessWidget {
 
     return GridView.builder(
         padding: const EdgeInsets.all(20),
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           mainAxisExtent: 80,
           maxCrossAxisExtent: 60,
@@ -54,8 +52,10 @@ class StatisticsGrid extends StatelessWidget {
         ),
         itemCount: giorniLavorativi.length,
         itemBuilder: (BuildContext ctx, index) {
-          return StatisticsItem(giorniLavorativi[index]['numeroGiorno'],
-              giorniLavorativi[index]['oreRegistrate']);
+          return StatisticsItem(
+            giorniLavorativi[index]['numeroGiorno'],
+            giorniLavorativi[index]['oreRegistrate'],
+          );
         });
   }
 }

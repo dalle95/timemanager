@@ -298,242 +298,250 @@ class Tasks with ChangeNotifier {
     String codiceWO;
 
     try {
-      // Chiamata per contare i WO
-      final response = await http.get(
-        url,
-        headers: headers,
-      );
-      //print(response.body);
-
-      print('Stato GET wo: ${json.decode(response.statusCode.toString())}');
-
-      if (response.statusCode >= 400) {
-        throw HttpException(
-          json.decode(response.body)['errors'][0]['title'].toString(),
+      try {
+        // Chiamata per contare i WO
+        final response = await http.get(
+          url,
+          headers: headers,
         );
+        //print(response.body);
+
+        print('Stato GET wo: ${json.decode(response.statusCode.toString())}');
+
+        if (response.statusCode >= 400) {
+          throw HttpException(
+            json.decode(response.body)['errors'][0]['title'].toString(),
+          );
+        } else {
+          // Estrazione Tasks
+          var extractedData =
+              json.decode(response.body) as Map<String, dynamic>;
+          for (var wo in extractedData['data']) {
+            numero++;
+          }
+        }
+      } catch (error) {
+        //print(error);
+        throw error;
       }
 
-      // Estrazione Tasks
-      var extractedData = json.decode(response.body) as Map<String, dynamic>;
+      String numeroStringa = '0000$numero';
+      codiceWO = 'TM.${numeroStringa.substring(numeroStringa.length - 5)}';
 
-      for (var wo in extractedData['data']) {
-        numero++;
-      }
-    } catch (error) {
-      //print(error);
-      throw error;
-    }
+      task.code = codiceWO;
 
-    String numeroStringa = '0000$numero';
-    codiceWO = 'TM.${numeroStringa.substring(numeroStringa.length - 5)}';
+      final urlWo = Uri.parse('$urlAmbiente/api/entities/v1/wo');
+      final urlEquipment = Uri.parse('$urlAmbiente/api/entities/v1/woeqpt');
 
-    task.code = codiceWO;
-
-    final urlWo = Uri.parse('$urlAmbiente/api/entities/v1/wo');
-    final urlEquipment = Uri.parse('$urlAmbiente/api/entities/v1/woeqpt');
-
-    final dataWO = json.encode(
-      task.commessa.responsabile.id == null
-          ? {
-              'data': {
-                'type': 'wo',
-                'attributes': {
-                  'code': task.code,
-                  'description': task.description,
-                  'statusCode': task.statusCode,
-                  'workPriority': task.priority,
-                  'xtraTxt10': task.note,
-                  'WOBegin':
-                      "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
-                  'WOEnd':
-                      "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
-                  'expTime': (task.stima.inMinutes / 60)
-                },
-                'relationships': {
-                  "actionType": {
-                    "data": {
-                      "type": "actiontype",
-                      "id": task.actionType.id,
-                    }
+      final dataWO = json.encode(
+        task.commessa.responsabile.id == null
+            ? {
+                'data': {
+                  'type': 'wo',
+                  'attributes': {
+                    'code': task.code,
+                    'description': task.description,
+                    'statusCode': task.statusCode,
+                    'workPriority': task.priority,
+                    'xtraTxt10': task.note,
+                    'WOBegin':
+                        "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
+                    'WOEnd':
+                        "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
+                    'expTime': (task.stima.inMinutes / 60)
                   },
-                  // "costCenter": {
-                  //   "data": {
-                  //     "type": "costcenter",
-                  //     "id": "177fed5ef2f-2ab4",
-                  //   }
-                  // }
-                }
-              }
-            }
-          : {
-              'data': {
-                'type': 'wo',
-                'attributes': {
-                  'code': task.code,
-                  'description': task.description,
-                  'statusCode': task.statusCode,
-                  'workPriority': task.priority,
-                  'xtraTxt10': task.note,
-                  'WOBegin':
-                      "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
-                  'WOEnd':
-                      "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
-                  'expTime': (task.stima.inMinutes / 60)
-                },
-                'relationships': {
-                  "actionType": {
-                    "data": {
-                      "type": "actiontype",
-                      "id": task.actionType.id,
-                    }
-                  },
-                  "supervisor": {
-                    "data": {
-                      "type": "actor",
-                      "id": task.commessa.responsabile.id,
-                    }
+                  'relationships': {
+                    "actionType": {
+                      "data": {
+                        "type": "actiontype",
+                        "id": task.actionType.id,
+                      }
+                    },
+                    // "costCenter": {
+                    //   "data": {
+                    //     "type": "costcenter",
+                    //     "id": "177fed5ef2f-2ab4",
+                    //   }
+                    // }
                   }
                 }
               }
-            },
-    );
-
-    //print(dataWO);
-
-    //print(url);
-    try {
-      // Chiamata per creare il WO
-      final response = await http.post(
-        urlWo,
-        body: dataWO,
-        headers: headers,
+            : {
+                'data': {
+                  'type': 'wo',
+                  'attributes': {
+                    'code': task.code,
+                    'description': task.description,
+                    'statusCode': task.statusCode,
+                    'workPriority': task.priority,
+                    'xtraTxt10': task.note,
+                    'WOBegin':
+                        "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
+                    'WOEnd':
+                        "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
+                    'expTime': (task.stima.inMinutes / 60)
+                  },
+                  'relationships': {
+                    "actionType": {
+                      "data": {
+                        "type": "actiontype",
+                        "id": task.actionType.id,
+                      }
+                    },
+                    "supervisor": {
+                      "data": {
+                        "type": "actor",
+                        "id": task.commessa.responsabile.id,
+                      }
+                    }
+                  }
+                }
+              },
       );
-      //print(response.body);
 
-      print('Stato wo: ${json.decode(response.statusCode.toString())}');
+      //print(dataWO);
 
-      if (response.statusCode >= 400) {
-        throw HttpException(
-          json.decode(response.body)['errors'][0]['title'].toString(),
+      //print(url);
+      try {
+        // Chiamata per creare il WO
+        final response = await http.post(
+          urlWo,
+          body: dataWO,
+          headers: headers,
         );
+        //print(response.body);
+        print(response.body);
+
+        print('Stato wo: ${json.decode(response.statusCode.toString())}');
+
+        if (response.statusCode >= 400) {
+          throw HttpException(
+            json.decode(response.body)['errors'][0]['title'].toString(),
+          );
+        } else {
+          task.id = json.decode(response.body)['data']['id'];
+        }
+      } catch (error) {
+        //print(error);
+        throw error;
       }
 
-      task.id = json.decode(response.body)['data']['id'];
+      // Json per il cliente
+      final dataBox = json.encode(
+        {
+          "data": {
+            "type": "woeqpt",
+            "attributes": {
+              "UOwner": null,
+              "modifyDate": null,
+              "directEqpt": true,
+              "persoId": null,
+              "referEqpt": false
+            },
+            "relationships": {
+              "WO": {
+                "data": {"type": "wo", "id": task.id}
+              },
+              "eqpt": {
+                "data": {"type": "box", "id": task.cliente.id}
+              }
+            }
+          }
+        },
+      );
+
+      // Json per la commessa
+      final dataMaterial = json.encode(
+        {
+          "data": {
+            "type": "woeqpt",
+            "attributes": {
+              "UOwner": null,
+              "modifyDate": null,
+              "directEqpt": true,
+              "persoId": null,
+              "referEqpt": true
+            },
+            "relationships": {
+              "WO": {
+                "data": {"type": "wo", "id": task.id}
+              },
+              "eqpt": {
+                "data": {"type": "material", "id": task.commessa.id}
+              }
+            }
+          }
+        },
+      );
+
+      if (task.cliente.id != null) {
+        try {
+          // Chiamata per creare il legame con WO-cliente
+          final responseBox = await http.post(
+            urlEquipment,
+            body: dataBox,
+            headers: headers,
+          );
+
+          print('Stato box: ${responseBox.statusCode}');
+
+          if (responseBox.statusCode >= 400) {
+            throw HttpException(
+              json.decode(responseBox.body)['errors'][0]['title'].toString(),
+            );
+          }
+        } catch (error) {
+          print(error);
+          throw error;
+        }
+      }
+
+      if (task.commessa.id != null) {
+        try {
+          // Chiamata per creare il legame con WO-commessa
+          final responseMaterial = await http.post(
+            urlEquipment,
+            body: dataMaterial,
+            headers: headers,
+          );
+
+          print('Stato material: ${responseMaterial.statusCode}');
+
+          if (responseMaterial.statusCode >= 400) {
+            throw HttpException(
+              json
+                  .decode(responseMaterial.body)['errors'][0]['title']
+                  .toString(),
+            );
+          }
+        } catch (error) {
+          print(error);
+          throw error;
+        }
+      }
+
+      final newTask = Task(
+        code: task.code,
+        description: task.description,
+        statusCode: task.statusCode,
+        priority: task.priority,
+        actionType: task.actionType,
+        note: task.note,
+        cliente: task.cliente,
+        commessa: task.commessa,
+        dataInizio: task.dataInizio,
+        dataFine: task.dataFine,
+        id: task.id,
+      );
+
+      //print(json.decode(response.body)['data']['id']);
+
+      _tasks.insert(index, newTask);
+      notifyListeners();
     } catch (error) {
       //print(error);
       throw error;
     }
-
-    // Json per il cliente
-    final dataBox = json.encode(
-      {
-        "data": {
-          "type": "woeqpt",
-          "attributes": {
-            "UOwner": null,
-            "modifyDate": null,
-            "directEqpt": true,
-            "persoId": null,
-            "referEqpt": false
-          },
-          "relationships": {
-            "WO": {
-              "data": {"type": "wo", "id": task.id}
-            },
-            "eqpt": {
-              "data": {"type": "box", "id": task.cliente.id}
-            }
-          }
-        }
-      },
-    );
-
-    // Json per la commessa
-    final dataMaterial = json.encode(
-      {
-        "data": {
-          "type": "woeqpt",
-          "attributes": {
-            "UOwner": null,
-            "modifyDate": null,
-            "directEqpt": true,
-            "persoId": null,
-            "referEqpt": true
-          },
-          "relationships": {
-            "WO": {
-              "data": {"type": "wo", "id": task.id}
-            },
-            "eqpt": {
-              "data": {"type": "material", "id": task.commessa.id}
-            }
-          }
-        }
-      },
-    );
-
-    if (task.cliente.id != null) {
-      try {
-        // Chiamata per creare il legame con WO-cliente
-        final responseBox = await http.post(
-          urlEquipment,
-          body: dataBox,
-          headers: headers,
-        );
-
-        print('Stato box: ${responseBox.statusCode}');
-
-        if (responseBox.statusCode >= 400) {
-          throw HttpException(
-            json.decode(responseBox.body)['errors'][0]['title'].toString(),
-          );
-        }
-      } catch (error) {
-        print(error);
-        throw error;
-      }
-    }
-
-    if (task.commessa.id != null) {
-      try {
-        // Chiamata per creare il legame con WO-commessa
-        final responseMaterial = await http.post(
-          urlEquipment,
-          body: dataMaterial,
-          headers: headers,
-        );
-
-        print('Stato material: ${responseMaterial.statusCode}');
-
-        if (responseMaterial.statusCode >= 400) {
-          throw HttpException(
-            json.decode(responseMaterial.body)['errors'][0]['title'].toString(),
-          );
-        }
-      } catch (error) {
-        print(error);
-        throw error;
-      }
-    }
-
-    final newTask = Task(
-      code: task.code,
-      description: task.description,
-      statusCode: task.statusCode,
-      priority: task.priority,
-      actionType: task.actionType,
-      note: task.note,
-      cliente: task.cliente,
-      commessa: task.commessa,
-      dataInizio: task.dataInizio,
-      dataFine: task.dataFine,
-      id: task.id,
-    );
-
-    //print(json.decode(response.body)['data']['id']);
-
-    _tasks.insert(index, newTask);
-    notifyListeners();
   }
 
   Future<void> updateTask(String id, Task initTask, Task newTask) async {
@@ -800,6 +808,95 @@ class Tasks with ChangeNotifier {
       notifyListeners();
     } catch (error) {
       print(error);
+      throw error;
+    }
+  }
+
+  Future<void> updatePeriodTask(
+      String id, Task task, DateTime dataOccupation) async {
+    // Preparo l'header
+    Map<String, String> headers = {
+      "X-CS-Access-Token": authToken,
+      "Content-Type": "application/vnd.api+json",
+    };
+
+    print('task date: ${task.dataInizio}');
+    print('occupation date: ${dataOccupation}');
+
+    final woIndex = _tasks.indexWhere((wo) => wo.id == id);
+
+    final url = Uri.parse('$urlAmbiente/api/entities/v1/wo/$id');
+
+    if (task.dataInizio.isAfter(dataOccupation)) {
+      task.dataInizio = DateTime(
+        dataOccupation.year,
+        dataOccupation.month,
+        dataOccupation.day,
+        8,
+      );
+    } else if (task.dataFine.isBefore(dataOccupation)) {
+      task.dataFine = DateTime(
+        dataOccupation.year,
+        dataOccupation.month,
+        dataOccupation.day,
+        18,
+      );
+    }
+
+    final data = json.encode(
+      {
+        'data': {
+          'type': 'wo',
+          'attributes': {
+            // 'code': task.code,
+            // 'description': task.description,
+            // 'statusCode': task.statusCode,
+            // 'workPriority': task.priority,
+            // 'xtraTxt10': task.note,
+            'WOBegin':
+                "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
+            'WOEnd':
+                "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
+            'expTime': (task.stima.inMinutes / 60)
+          },
+          // 'relationships': {
+          //   "actionType": {
+          //     "data": {
+          //       "type": "actiontype",
+          //       "id": task.actionType.id,
+          //     }
+          //   },
+          // "costCenter": {
+          //   "data": {
+          //     "type": "costcenter",
+          //     "id": "177fed5ef2f-2ab4",
+          //   }
+          // }
+          // }
+        }
+      },
+    );
+
+    try {
+      final response = await http.patch(
+        url,
+        body: data,
+        headers: headers,
+      );
+
+      print('Stato update wo: ${response.statusCode}');
+
+      if (response.statusCode >= 400) {
+        throw HttpException(
+          json.decode(response.body)['errors'][0]['title'].toString(),
+        );
+      }
+
+      if (woIndex >= 0) {
+        _tasks[woIndex] = task;
+        notifyListeners();
+      }
+    } catch (error) {
       throw error;
     }
   }

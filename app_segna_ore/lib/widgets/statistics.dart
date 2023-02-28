@@ -51,7 +51,7 @@ class _StatisticsState extends State<Statistics> {
 
   @override
   void initState() {
-    _meseStringa = "${_nomeMese(_meseInt)}, ${_annoInt.toString()}";
+    _meseStringa = "${_nomeMese(_meseInt)} ${_annoInt.toString()}";
     _periodoRiferimento = DateFormat("yyyy-MM").format(_mese);
     super.initState();
   }
@@ -62,7 +62,7 @@ class _StatisticsState extends State<Statistics> {
         _mese = DateTime(_mese.year, _mese.month - 1, 1);
         _meseInt = DateTime(_mese.year, _mese.month, 1).month;
         _annoInt = DateTime(_mese.year, _mese.month, 1).year;
-        _meseStringa = "${_nomeMese(_meseInt)}, ${_annoInt.toString()}";
+        _meseStringa = "${_nomeMese(_meseInt)} ${_annoInt.toString()}";
         _periodoRiferimento = DateFormat("yyyy-MM").format(_mese);
       });
     } else {
@@ -70,7 +70,7 @@ class _StatisticsState extends State<Statistics> {
         _mese = DateTime(_mese.year, _mese.month + 1, 1);
         _meseInt = DateTime(_mese.year, _mese.month, 1).month;
         _annoInt = DateTime(_mese.year, _mese.month, 1).year;
-        _meseStringa = "${_nomeMese(_meseInt)}, ${_annoInt.toString()}";
+        _meseStringa = "${_nomeMese(_meseInt)} ${_annoInt.toString()}";
         _periodoRiferimento = DateFormat("yyyy-MM").format(_mese);
       });
     }
@@ -86,6 +86,8 @@ class _StatisticsState extends State<Statistics> {
 
   @override
   Widget build(BuildContext context) {
+    var mediaQuery = MediaQuery.of(context);
+
     return Container(
       height: double.infinity,
       width: double.infinity,
@@ -103,7 +105,6 @@ class _StatisticsState extends State<Statistics> {
       child: Padding(
         padding: const EdgeInsets.only(top: 20),
         child: SizedBox(
-          height: 200,
           width: double.infinity,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -199,114 +200,134 @@ class _StatisticsState extends State<Statistics> {
               Expanded(
                 flex: 7,
                 //height: 500,
-                child: ListView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  //shrinkWrap: true,
-                  children: [
-                    Container(
-                      alignment: Alignment.center,
-                      //padding: const EdgeInsets.all(20),
-                      width: 350,
-                      height: 520,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.background,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(10),
-                          topRight: Radius.circular(10),
-                          bottomLeft: Radius.circular(10),
-                          bottomRight: Radius.circular(10),
+                child: RefreshIndicator(
+                  onRefresh: () =>
+                      _refreshWorkTimes(context, _periodoRiferimento),
+                  child: Dismissible(
+                    key: ValueKey(_meseStringa),
+                    onDismissed: (direction) {
+                      if (direction == DismissDirection.endToStart) {
+                        _modificaMese('più');
+                      } else {
+                        _modificaMese('meno');
+                      }
+                    },
+                    child: ListView(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 10),
+                      //shrinkWrap: true,
+                      children: [
+                        Container(
+                          alignment: Alignment.center,
+                          height: mediaQuery.size.height * 0.65,
+                          width: mediaQuery.size.width * 0.4,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.background,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
+                              bottomLeft: Radius.circular(10),
+                              bottomRight: Radius.circular(10),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 15,
+                                  right: 15,
+                                  top: 10,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: const [
+                                    Text(
+                                      'Lu',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Ma',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Me',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Gi',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Ve',
+                                      style: TextStyle(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(
+                                height: mediaQuery.size.height * 0.6,
+                                child: FutureBuilder(
+                                  future: _refreshWorkTimes(
+                                      context, _periodoRiferimento),
+                                  builder: (ctx, dataSnapshot) {
+                                    if (dataSnapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return LoadingIndicator(
+                                          'In caricamento!');
+                                    } else {
+                                      if (dataSnapshot.error != null) {
+                                        return const Center(
+                                          child: Text(
+                                              'Si è verificato un errore.'),
+                                        );
+                                        //Error
+                                      } else {
+                                        return StatisticsGrid(_mese);
+                                      }
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              left: 15,
-                              right: 15,
-                              top: 10,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: const [
-                                Text(
-                                  'Lu',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  'Ma',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  'Me',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  'Gi',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  'Ve',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(
-                            height: 460,
-                            child: FutureBuilder(
-                              future: _refreshWorkTimes(
-                                  context, _periodoRiferimento),
-                              builder: (ctx, dataSnapshot) {
-                                // if (dataSnapshot.connectionState == ConnectionState.waiting &&
-                                //     dataSnapshot.connectionState != ConnectionState.done) {
-                                //   return LoadingIndicator('In caricamento!');
-                                // } else {
-                                //   if (dataSnapshot.error != null) {
-                                //     return const Center(
-                                //       child: Text('Si è verificato un errore.'),
-                                //     );
-                                //     //Error
-                                //   } else {
-                                //     return StatisticsGrid(_mese);
-                                //   }
-                                // }
-                                if (dataSnapshot.connectionState ==
-                                    ConnectionState.done) {
-                                  if (dataSnapshot.connectionState ==
-                                      ConnectionState.done) {
-                                    return StatisticsGrid(_mese);
-                                  } else {
-                                    return const Center(
-                                      child: Text('Si è verificato un errore.'),
-                                    );
-                                  }
-                                } else {
-                                  return LoadingIndicator('In caricamento!');
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
+                        // SizedBox(
+                        //   height: mediaQuery.size.height * 0.02,
+                        // ),
+                        // Container(
+                        //   alignment: Alignment.center,
+                        //   height: mediaQuery.size.height * 0.65,
+                        //   width: mediaQuery.size.width * 0.4,
+                        //   decoration: BoxDecoration(
+                        //     color: Theme.of(context).colorScheme.background,
+                        //     borderRadius: const BorderRadius.only(
+                        //       topLeft: Radius.circular(10),
+                        //       topRight: Radius.circular(10),
+                        //       bottomLeft: Radius.circular(10),
+                        //       bottomRight: Radius.circular(10),
+                        //     ),
+                        //   ),
+                        // ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               )
             ],

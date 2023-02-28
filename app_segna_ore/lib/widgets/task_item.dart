@@ -35,6 +35,7 @@ class _TaskItemState extends State<TaskItem> {
               'id': widget.task.id,
               'code': widget.task.code,
               'description': widget.task.description,
+              'priority': widget.task.priority,
               'statusCode': widget.task.statusCode,
               'actionType': ActionType(
                 id: widget.task.actionType.id,
@@ -56,7 +57,9 @@ class _TaskItemState extends State<TaskItem> {
                 statusCode: widget.task.commessa.statusCode,
               ),
               'xtraTxt10': widget.task.note,
-              'workflow': [],
+              'dataInizio': widget.task.dataInizio,
+              'dataFine': widget.task.dataFine,
+              'stima': widget.task.stima,
             },
           );
         }
