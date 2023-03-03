@@ -16,7 +16,7 @@ class StatisticsCaricoList extends StatelessWidget {
 
     return caricoXCommessa.isEmpty
         ? const Center(
-            child: Text('Non sono ancora presenti ore caricate.'),
+            child: Text('Non sono presenti ore caricate.'),
           )
         : ListView.builder(
             padding: const EdgeInsets.all(20),

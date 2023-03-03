@@ -353,7 +353,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
                 // Inserisco il WorkTime
                 await Provider.of<WorkTimes>(context, listen: false)
                     .addWorkTime(_editedWorkTime);
-                _tipologia = tipologia.insert;
+                _tipologia = Tipologia.insert;
                 navigator.pop();
                 _mostraSnackbarRisultato(_tipologia);
               } on HttpException catch (error) {

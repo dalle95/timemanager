@@ -62,7 +62,7 @@ class _StatisticsCaricoItemState extends State<StatisticsCaricoItem> {
                   padding: const EdgeInsets.only(left: 5),
                   child: SizedBox(
                     child: Text(
-                      '${widget.oreRegistrate} | ${(widget.caricoPercentuale * 100).toStringAsFixed(2)}%',
+                      '${widget.oreRegistrate} ${widget.oreRegistrate == '1.0' ? 'ora' : 'ore'} | ${(widget.caricoPercentuale * 100).toStringAsFixed(2)}%',
                       textAlign: TextAlign.start,
                     ),
                   ),

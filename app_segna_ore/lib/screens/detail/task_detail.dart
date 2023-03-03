@@ -838,7 +838,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               TextFormField(
                 initialValue: _initTask.note ?? '',
                 decoration: const InputDecoration(labelText: 'Note'),
-                textInputAction: TextInputAction.next,
+                //textInputAction: TextInputAction.next,
                 minLines: 6,
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
