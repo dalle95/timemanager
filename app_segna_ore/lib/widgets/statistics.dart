@@ -1,3 +1,4 @@
+import 'package:app_segna_ore/widgets/statistics_carico_list.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -308,23 +309,65 @@ class _StatisticsState extends State<Statistics> {
                             ],
                           ),
                         ),
-                        // SizedBox(
-                        //   height: mediaQuery.size.height * 0.02,
-                        // ),
-                        // Container(
-                        //   alignment: Alignment.center,
-                        //   height: mediaQuery.size.height * 0.65,
-                        //   width: mediaQuery.size.width * 0.4,
-                        //   decoration: BoxDecoration(
-                        //     color: Theme.of(context).colorScheme.background,
-                        //     borderRadius: const BorderRadius.only(
-                        //       topLeft: Radius.circular(10),
-                        //       topRight: Radius.circular(10),
-                        //       bottomLeft: Radius.circular(10),
-                        //       bottomRight: Radius.circular(10),
-                        //     ),
-                        //   ),
-                        // ),
+                        SizedBox(
+                          height: mediaQuery.size.height * 0.02,
+                        ),
+                        Container(
+                          alignment: Alignment.center,
+                          height: mediaQuery.size.height * 0.65,
+                          width: mediaQuery.size.width * 0.4,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.background,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
+                              bottomLeft: Radius.circular(10),
+                              bottomRight: Radius.circular(10),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              left: 15,
+                              right: 15,
+                              top: 20,
+                            ),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'Carico di lavoro per commessa:',
+                                  style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: mediaQuery.size.height * 0.6,
+                                  child: FutureBuilder(
+                                    future: _refreshWorkTimes(
+                                        context, _periodoRiferimento),
+                                    builder: (ctx, dataSnapshot) {
+                                      if (dataSnapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return LoadingIndicator(
+                                            'In caricamento!');
+                                      } else {
+                                        if (dataSnapshot.error != null) {
+                                          return const Center(
+                                            child: Text(
+                                                'Si è verificato un errore.'),
+                                          );
+                                          //Error
+                                        } else {
+                                          return StatisticsCaricoList();
+                                        }
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),

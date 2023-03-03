@@ -51,6 +51,49 @@ class WorkTimes with ChangeNotifier {
     return oreSegnate;
   }
 
+  List<Map> calcolaCarichi(List<WorkTime> worktimes) {
+    List<Map> caricoXCommessa = [];
+
+    for (int index = 0; index < worktimes.length; index++) {
+      if (caricoXCommessa
+          .where((worktime) =>
+              worktime['commessa'] == worktimes[index].commessa.description)
+          .isEmpty) {
+        caricoXCommessa.add(
+          {
+            'commessa': worktimes[index].commessa.description,
+            'oreRegistrate': worktimes[index].tempoFatturato.inMinutes / 60,
+          },
+        );
+      } else {
+        int indice = caricoXCommessa.indexWhere((worktime) =>
+            worktime['commessa'] == worktimes[index].commessa.description);
+
+        caricoXCommessa[indice]['oreRegistrate'] = caricoXCommessa[indice]
+                ['oreRegistrate'] +
+            worktimes[indice].tempoFatturato.inMinutes / 60;
+      }
+    }
+
+    double oreTot = 0;
+    for (int index = 0; index < caricoXCommessa.length; index++) {
+      oreTot = oreTot + caricoXCommessa[index]['oreRegistrate'];
+    }
+
+    for (int index = 0; index < caricoXCommessa.length; index++) {
+      caricoXCommessa[index] = {
+        'commessa': caricoXCommessa[index]['commessa'],
+        'oreRegistrate': caricoXCommessa[index]['oreRegistrate'],
+        'caricoPercentuale': (caricoXCommessa[index]['oreRegistrate'] / oreTot),
+      };
+    }
+
+    caricoXCommessa
+        .sort((a, b) => a['oreRegistrate'].compareTo(b['oreRegistrate']));
+
+    return caricoXCommessa.reversed.toList();
+  }
+
   // Funzione per estrarre le nature tramite richiesta get
   Future<void> fetchAndSetWorkTimes([String periodoRiferimento]) async {
     // Inizializzazione lista vuota
