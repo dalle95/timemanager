@@ -12,6 +12,8 @@ class MaterialListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('Costruzione lista');
+
     Future<void> _refreshMaterials(BuildContext context, String cliente) async {
       await Provider.of<Materials>(context, listen: false)
           .fetchAndSetMaterials(cliente);
@@ -22,8 +24,66 @@ class MaterialListScreen extends StatelessWidget {
     var function = arguments['function'];
     var cliente = arguments['cliente'];
 
+    //var mediaQuery = MediaQuery.of(context);
+
+    void mostraDialogoFiltro() {
+      showDialog(
+        context: context,
+        builder: (_) {
+          var filtroController = TextEditingController();
+          return SizedBox(
+            height: 100, //mediaQuery.size.height * 0.1,
+            width: 100, //mediaQuery.size.width * 0.5,
+            child: AlertDialog(
+              title: const Text('Filtro'),
+              content: SizedBox(
+                height: 100, //mediaQuery.size.height * 0.1,
+                width: 100, //mediaQuery.size.width * 0.5,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    TextFormField(
+                      controller: filtroController,
+                      decoration: const InputDecoration(hintText: 'Codice'),
+                      onFieldSubmitted: (_) async {
+                        cliente = filtroController.text;
+
+                        Navigator.pop(context);
+                        await _refreshMaterials(context, cliente);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Annulla'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    cliente = filtroController.text;
+
+                    Navigator.pop(context);
+                    _refreshMaterials(context, cliente);
+                  },
+                  child: const Text('Cerca'),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          IconButton(
+            onPressed: mostraDialogoFiltro,
+            icon: const Icon(Icons.search),
+          )
+        ],
         title: Consumer<Materials>(
             builder: (_, material, ch) => Badge(
                   child: ch,
@@ -40,7 +100,6 @@ class MaterialListScreen extends StatelessWidget {
         //   ),
         // ],
       ),
-      drawer: function == 'list' ? MainDrawer() : null,
       body: RefreshIndicator(
         onRefresh: () => _refreshMaterials(context, cliente),
         child: FutureBuilder(

@@ -70,7 +70,7 @@ class Settings extends StatelessWidget {
               children: [
                 const TextSpan(
                   style: TextStyle(color: Colors.black, fontSize: 20),
-                  text: "TimeManager versione: 1\n\n",
+                  text: "TimeManager versione: 2\n\n",
                 ),
                 const TextSpan(
                   style: TextStyle(color: Colors.black, fontSize: 15),

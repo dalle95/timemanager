@@ -38,7 +38,7 @@ class Materials with ChangeNotifier {
     print('Funzione fetchAndSetMaterials');
     final url = Uri.parse(
       cliente != null
-          ? '$urlAmbiente/api/entities/v1/material?include=supervisor&filter[eqptType]=COMMESSA&filter[code][LIKE]=$cliente'
+          ? '$urlAmbiente/api/entities/v1/material?include=supervisor&filter[eqptType]=COMMESSA&filter[code][LIKE]=${cliente.toUpperCase()}'
           : '$urlAmbiente/api/entities/v1/material?include=supervisor&filter[eqptType]=COMMESSA',
     );
 

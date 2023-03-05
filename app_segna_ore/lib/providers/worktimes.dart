@@ -56,7 +56,6 @@ class WorkTimes with ChangeNotifier {
     double oreTot = 0;
 
     for (int index = 0; index < worktimes.length; index++) {
-      oreTot = oreTot + caricoXCommessa[index]['oreRegistrate'];
       if (caricoXCommessa
           .where((worktime) =>
               worktime['commessa'] == worktimes[index].commessa.description)
@@ -75,6 +74,10 @@ class WorkTimes with ChangeNotifier {
                 ['oreRegistrate'] +
             worktimes[indice].tempoFatturato.inMinutes / 60;
       }
+    }
+
+    for (int index = 0; index < caricoXCommessa.length; index++) {
+      oreTot = oreTot + caricoXCommessa[index]['oreRegistrate'];
     }
 
     for (int index = 0; index < caricoXCommessa.length; index++) {
