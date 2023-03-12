@@ -57,7 +57,7 @@ class Auth with ChangeNotifier {
       _urlAmbiente = urlAmbiente;
       _token = responseData['X-CS-Access-Token'];
       _expiryDate = DateTime.now().add(
-        const Duration(seconds: 604800),
+        const Duration(seconds: 432000),
       );
 
       try {

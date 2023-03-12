@@ -1,7 +1,7 @@
-import 'package:app_segna_ore/widgets/worktime_item.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/worktimes.dart';
+import '../widgets/worktime_item.dart';
 
 class WorkTimeList extends StatelessWidget {
   @override

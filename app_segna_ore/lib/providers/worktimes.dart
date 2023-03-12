@@ -51,35 +51,66 @@ class WorkTimes with ChangeNotifier {
     return oreSegnate;
   }
 
-  List<Map> calcolaCarichi(List<WorkTime> worktimes) {
+  // Funzione per dividere le ore registrate in una lista di giorni su base mensile
+  List<Map> impostaMese(DateTime mese) {
+    List<Map> giorniLavorativi = [];
+    DateTime indexDay = DateTime(mese.year, mese.month, 1);
+    if (indexDay.weekday != 1 && indexDay.weekday < 6) {
+      giorniLavorativi = List.generate(
+          indexDay.weekday - 1,
+          (index) => {
+                "numeroGiorno": "",
+                "oreRegistrate": "",
+              });
+    }
+
+    for (indexDay;
+        indexDay.month == mese.month;
+        indexDay = indexDay.add(const Duration(days: 1))) {
+      if (indexDay.weekday < 6) {
+        giorniLavorativi.add({
+          "numeroGiorno": indexDay.toIso8601String(),
+          "oreRegistrate": oreSegnate(indexDay).toString(),
+        });
+      }
+    }
+    return giorniLavorativi;
+  }
+
+  // Funzione per calcolare i carichi di lavoro per le commesse
+  List<Map> calcolaCarichi() {
+    // Dichiaro la lista che restituisco e il totale di ore
     List<Map> caricoXCommessa = [];
     double oreTot = 0;
 
-    for (int index = 0; index < worktimes.length; index++) {
+    // Creo un ciclo per iterare ogni worktime caricato catalogandolo per commessa
+    for (int index = 0; index < _workTimes.length; index++) {
+      oreTot = oreTot + _workTimes[index].tempoFatturato.inMinutes / 60;
       if (caricoXCommessa
           .where((worktime) =>
-              worktime['commessa'] == worktimes[index].commessa.description)
+              worktime['commessa'] == _workTimes[index].commessa.description)
           .isEmpty) {
         caricoXCommessa.add(
           {
-            'commessa': worktimes[index].commessa.description,
-            'oreRegistrate': worktimes[index].tempoFatturato.inMinutes / 60,
+            'commessa': _workTimes[index].commessa.description,
+            'oreRegistrate': _workTimes[index].tempoFatturato.inMinutes / 60,
           },
         );
       } else {
         int indice = caricoXCommessa.indexWhere((worktime) =>
-            worktime['commessa'] == worktimes[index].commessa.description);
+            worktime['commessa'] == _workTimes[index].commessa.description);
 
         caricoXCommessa[indice]['oreRegistrate'] = caricoXCommessa[indice]
                 ['oreRegistrate'] +
-            worktimes[indice].tempoFatturato.inMinutes / 60;
+            _workTimes[indice].tempoFatturato.inMinutes / 60;
       }
     }
 
-    for (int index = 0; index < caricoXCommessa.length; index++) {
-      oreTot = oreTot + caricoXCommessa[index]['oreRegistrate'];
-    }
+    // for (int index = 0; index < caricoXCommessa.length; index++) {
+    //   oreTot = oreTot + caricoXCommessa[index]['oreRegistrate'];
+    // }
 
+    // Calcolo la percentuale di carico per ogni commessa nella lista
     for (int index = 0; index < caricoXCommessa.length; index++) {
       caricoXCommessa[index] = {
         'commessa': caricoXCommessa[index]['commessa'],
@@ -88,9 +119,11 @@ class WorkTimes with ChangeNotifier {
       };
     }
 
+    // Ordino la lista in base alle ore registrate (prima quella con minori ore)
     caricoXCommessa
         .sort((a, b) => a['oreRegistrate'].compareTo(b['oreRegistrate']));
 
+    // Restituisco la lista al contrario per avere quella con ore maggiori prima
     return caricoXCommessa.reversed.toList();
   }
 

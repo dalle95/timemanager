@@ -11,8 +11,7 @@ class StatisticsCaricoList extends StatelessWidget {
     final workTimes = workTimesData.workTimes;
 
     final List<Map> caricoXCommessa =
-        Provider.of<WorkTimes>(context, listen: false)
-            .calcolaCarichi(workTimes);
+        Provider.of<WorkTimes>(context, listen: false).calcolaCarichi();
 
     return caricoXCommessa.isEmpty
         ? const Center(
@@ -20,7 +19,7 @@ class StatisticsCaricoList extends StatelessWidget {
           )
         : ListView.builder(
             padding: const EdgeInsets.all(20),
-            //physics: const NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: caricoXCommessa.length,
             itemBuilder: (BuildContext ctx, index) {
               return StatisticsCaricoItem(

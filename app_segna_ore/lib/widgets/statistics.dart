@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:app_segna_ore/widgets/statistics_carico_list.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -198,30 +200,19 @@ class _StatisticsState extends State<Statistics> {
                   ),
                 ),
               ),
-              Expanded(
-                flex: 7,
-                //height: 500,
-                child: RefreshIndicator(
-                  onRefresh: () =>
-                      _refreshWorkTimes(context, _periodoRiferimento),
-                  child: Dismissible(
-                    key: ValueKey(_meseStringa),
-                    onDismissed: (direction) {
-                      if (direction == DismissDirection.endToStart) {
-                        _modificaMese('più');
-                      } else {
-                        _modificaMese('meno');
-                      }
-                    },
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                      //shrinkWrap: true,
-                      children: [
-                        Container(
+              FutureBuilder(
+                future: _refreshWorkTimes(context, _periodoRiferimento),
+                builder: (ctx, dataSnapshot) {
+                  if (dataSnapshot.connectionState == ConnectionState.waiting) {
+                    return Expanded(
+                      flex: 7,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 10),
+                        child: Container(
                           alignment: Alignment.center,
-                          height: mediaQuery.size.height * 0.65,
-                          width: mediaQuery.size.width * 0.4,
+                          height: mediaQuery.size.height * 0.68,
+                          width: mediaQuery.size.width * 0.9,
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.background,
                             borderRadius: const BorderRadius.only(
@@ -231,148 +222,234 @@ class _StatisticsState extends State<Statistics> {
                               bottomRight: Radius.circular(10),
                             ),
                           ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 15,
-                                  right: 15,
-                                  top: 10,
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: const [
-                                    Text(
-                                      'Lu',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Ma',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Me',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Gi',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Ve',
-                                      style: TextStyle(
-                                        fontSize: 17,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              SizedBox(
-                                height: mediaQuery.size.height * 0.6,
-                                child: FutureBuilder(
-                                  future: _refreshWorkTimes(
-                                      context, _periodoRiferimento),
-                                  builder: (ctx, dataSnapshot) {
-                                    if (dataSnapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return LoadingIndicator(
-                                          'In caricamento!');
-                                    } else {
-                                      if (dataSnapshot.error != null) {
-                                        return const Center(
-                                          child: Text(
-                                              'Si è verificato un errore.'),
-                                        );
-                                        //Error
-                                      } else {
-                                        return StatisticsGrid(_mese);
-                                      }
-                                    }
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
+                          child: LoadingIndicator('In caricamento!'),
                         ),
-                        SizedBox(
-                          height: mediaQuery.size.height * 0.02,
-                        ),
-                        Container(
-                          alignment: Alignment.center,
-                          height: mediaQuery.size.height * 0.65,
-                          width: mediaQuery.size.width * 0.4,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.background,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(10),
-                              bottomLeft: Radius.circular(10),
-                              bottomRight: Radius.circular(10),
+                      ),
+                    );
+                  } else {
+                    if (dataSnapshot.error != null) {
+                      return Expanded(
+                        flex: 7,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                            alignment: Alignment.center,
+                            height: mediaQuery.size.height * 0.68,
+                            width: mediaQuery.size.width * 0.4,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.background,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(10),
+                                topRight: Radius.circular(10),
+                                bottomLeft: Radius.circular(10),
+                                bottomRight: Radius.circular(10),
+                              ),
+                            ),
+                            child: const Center(
+                              child: Text('Si è verificato un errore.'),
                             ),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                              left: 15,
-                              right: 15,
-                              top: 20,
-                            ),
-                            child: Column(
+                        ),
+                      );
+                      //Error
+                    } else {
+                      return Expanded(
+                        flex: 7,
+                        //height: 500,
+                        child: RefreshIndicator(
+                          onRefresh: () =>
+                              _refreshWorkTimes(context, _periodoRiferimento),
+                          child: Dismissible(
+                            key: ValueKey(_meseStringa),
+                            onDismissed: (direction) {
+                              if (direction == DismissDirection.endToStart) {
+                                _modificaMese('più');
+                              } else {
+                                _modificaMese('meno');
+                              }
+                            },
+                            child: ListView(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                              //shrinkWrap: true,
                               children: [
-                                const Text(
-                                  'Carico di lavoro per commessa:',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
+                                Container(
+                                  alignment: Alignment.center,
+                                  height: max(
+                                    (Provider.of<WorkTimes>(context,
+                                                                listen: false)
+                                                            .impostaMese(_mese)
+                                                            .length /
+                                                        5 ==
+                                                    4.0
+                                                ? 4
+                                                : 5) *
+                                            mediaQuery.size.width *
+                                            0.25 +
+                                        mediaQuery.size.width * 0.3,
+                                    mediaQuery.size.width * 0.3,
+                                  ), //mediaQuery.size.height * 0.68,
+                                  width: mediaQuery.size.width * 0.4,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .background,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(10),
+                                      topRight: Radius.circular(10),
+                                      bottomLeft: Radius.circular(10),
+                                      bottomRight: Radius.circular(10),
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 20,
+                                    ),
+                                    child: ListView(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 20,
+                                      ),
+                                      physics:
+                                          const NeverScrollableScrollPhysics(),
+                                      //mainAxisAlignment: MainAxisAlignment.start,
+
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.only(
+                                            left: 15,
+                                            right: 15,
+                                            top: 10,
+                                          ),
+                                          alignment: Alignment.center,
+                                          child: const Text(
+                                            'Calendario',
+                                            style: TextStyle(
+                                              fontSize: 17,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            left: 15,
+                                            right: 15,
+                                            top: 10,
+                                          ),
+                                          child: SizedBox(
+                                            width: mediaQuery.size.width * 0.72,
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.spaceAround,
+                                              children: const [
+                                                Text(
+                                                  'Lu',
+                                                  style: TextStyle(
+                                                    fontSize: 17,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Ma',
+                                                  style: TextStyle(
+                                                    fontSize: 17,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Me',
+                                                  style: TextStyle(
+                                                    fontSize: 17,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Gi',
+                                                  style: TextStyle(
+                                                    fontSize: 17,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'Ve',
+                                                  style: TextStyle(
+                                                    fontSize: 17,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        SizedBox(
+                                          height: mediaQuery.size.height * 0.6,
+                                          width: mediaQuery.size.width * 0.8,
+                                          child: StatisticsGrid(_mese),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                                 SizedBox(
-                                  height: mediaQuery.size.height * 0.6,
-                                  child: FutureBuilder(
-                                    future: _refreshWorkTimes(
-                                        context, _periodoRiferimento),
-                                    builder: (ctx, dataSnapshot) {
-                                      if (dataSnapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return LoadingIndicator(
-                                            'In caricamento!');
-                                      } else {
-                                        if (dataSnapshot.error != null) {
-                                          return const Center(
-                                            child: Text(
-                                                'Si è verificato un errore.'),
-                                          );
-                                          //Error
-                                        } else {
-                                          return StatisticsCaricoList();
-                                        }
-                                      }
-                                    },
+                                  height: mediaQuery.size.height * 0.02,
+                                ),
+                                Container(
+                                  alignment: Alignment.center,
+                                  height: max(
+                                    Provider.of<WorkTimes>(context,
+                                                    listen: false)
+                                                .calcolaCarichi()
+                                                .length *
+                                            60.0 +
+                                        60.0,
+                                    120,
+                                  ), //mediaQuery.size.height * 0.65,
+                                  width: mediaQuery.size.width * 0.4,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .background,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(10),
+                                      topRight: Radius.circular(10),
+                                      bottomLeft: Radius.circular(10),
+                                      bottomRight: Radius.circular(10),
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 15,
+                                      right: 15,
+                                      top: 20,
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        const Text(
+                                          'Carico di lavoro per commessa:',
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          //height: mediaQuery.size.height * 0.6,
+                                          child: StatisticsCaricoList(),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-              )
+                      );
+                    }
+                  }
+                },
+              ),
             ],
           ),
         ),

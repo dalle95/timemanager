@@ -12,43 +12,19 @@ class StatisticsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<Map> impostaMese(DateTime mese) {
-      List<Map> giorniLavorativi = [];
-      DateTime indexDay = DateTime(mese.year, mese.month, 1);
-      if (indexDay.weekday != 1 && indexDay.weekday < 6) {
-        giorniLavorativi = List.generate(
-            indexDay.weekday - 1,
-            (index) => {
-                  "numeroGiorno": "",
-                  "oreRegistrate": "",
-                });
-      }
+    var mediaQuery = MediaQuery.of(context);
 
-      for (indexDay;
-          indexDay.month == mese.month;
-          indexDay = indexDay.add(const Duration(days: 1))) {
-        if (indexDay.weekday < 6) {
-          giorniLavorativi.add({
-            "numeroGiorno": indexDay.toIso8601String(),
-            "oreRegistrate":
-                Provider.of<WorkTimes>(context).oreSegnate(indexDay).toString(),
-          });
-        }
-      }
-      return giorniLavorativi;
-    }
-
-    final List<Map> giorniLavorativi = impostaMese(mese);
+    final List<Map> giorniLavorativi =
+        Provider.of<WorkTimes>(context, listen: false).impostaMese(mese);
 
     return GridView.builder(
         padding: const EdgeInsets.all(20),
         physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          mainAxisExtent: 80,
-          maxCrossAxisExtent: 60,
-          //childAspectRatio: 3 / 2,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 5,
+          mainAxisExtent: mediaQuery.size.height * 0.1,
+          crossAxisSpacing: mediaQuery.size.width * 0.02,
+          mainAxisSpacing: mediaQuery.size.height * 0.01,
         ),
         itemCount: giorniLavorativi.length,
         itemBuilder: (BuildContext ctx, index) {

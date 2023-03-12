@@ -5,15 +5,12 @@ import '../../providers/materials.dart';
 import '../../widgets/material_list.dart';
 import '../../widgets/loading_indicator.dart';
 import '../../widgets/badge.dart';
-import '../../widgets/main_drawer.dart';
 
 class MaterialListScreen extends StatelessWidget {
   static const routeName = '/material-list';
 
   @override
   Widget build(BuildContext context) {
-    print('Costruzione lista');
-
     Future<void> _refreshMaterials(BuildContext context, String cliente) async {
       await Provider.of<Materials>(context, listen: false)
           .fetchAndSetMaterials(cliente);
@@ -57,15 +54,18 @@ class MaterialListScreen extends StatelessWidget {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    filtroController.dispose();
+                  },
                   child: const Text('Annulla'),
                 ),
                 TextButton(
                   onPressed: () {
                     cliente = filtroController.text;
-
                     Navigator.pop(context);
                     _refreshMaterials(context, cliente);
+                    filtroController.dispose();
                   },
                   child: const Text('Cerca'),
                 ),

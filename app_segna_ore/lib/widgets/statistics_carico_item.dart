@@ -43,7 +43,7 @@ class _StatisticsCaricoItemState extends State<StatisticsCaricoItem> {
                 Container(
                   alignment: Alignment.centerLeft,
                   child: Container(
-                    width: 400 * (widget.caricoPercentuale),
+                    width: 350 * (widget.caricoPercentuale),
                     height: 20,
                     decoration: const BoxDecoration(
                       color: Colors.orange,
