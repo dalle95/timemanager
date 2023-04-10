@@ -253,7 +253,7 @@ class Tasks with ChangeNotifier {
                 commessa: material,
                 note: wo['attributes']['xtraTxt10'],
                 stima: Duration(
-                    minutes: (wo['attributes']['expTime'] * 60).toInt()),
+                    minutes: (wo['attributes']['expTime'] ?? 0 * 60).toInt()),
                 dataInizio: DateTime.parse(wo['attributes']['WOBegin']),
                 dataFine: DateTime.parse(wo['attributes']['WOEnd']),
                 workflowTransitions: listWorkflowTransitions,

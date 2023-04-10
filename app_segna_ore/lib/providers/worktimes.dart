@@ -41,9 +41,12 @@ class WorkTimes with ChangeNotifier {
   double oreSegnate(DateTime giorno) {
     double oreSegnate = 0.0;
     for (var index = 0; index < itemCount; index++) {
+      print(DateTime(_workTimes[index].data.year, _workTimes[index].data.month,
+              _workTimes[index].data.day)
+          .toString());
       if (DateTime(_workTimes[index].data.year, _workTimes[index].data.month,
               _workTimes[index].data.day) ==
-          giorno) {
+          DateTime(giorno.year, giorno.month, giorno.day)) {
         oreSegnate =
             oreSegnate + (_workTimes[index].tempoFatturato.inMinutes / 60);
       }

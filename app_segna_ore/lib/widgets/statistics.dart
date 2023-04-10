@@ -260,8 +260,11 @@ class _StatisticsState extends State<Statistics> {
                         flex: 7,
                         //height: 500,
                         child: RefreshIndicator(
-                          onRefresh: () =>
-                              _refreshWorkTimes(context, _periodoRiferimento),
+                          onRefresh: () async {
+                            await _refreshWorkTimes(
+                                context, _periodoRiferimento);
+                            setState(() {});
+                          },
                           child: Dismissible(
                             key: ValueKey(_meseStringa),
                             onDismissed: (direction) {

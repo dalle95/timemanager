@@ -15,7 +15,7 @@ class StatisticsGrid extends StatelessWidget {
     var mediaQuery = MediaQuery.of(context);
 
     final List<Map> giorniLavorativi =
-        Provider.of<WorkTimes>(context, listen: false).impostaMese(mese);
+        Provider.of<WorkTimes>(context).impostaMese(mese);
 
     return GridView.builder(
         padding: const EdgeInsets.all(20),
