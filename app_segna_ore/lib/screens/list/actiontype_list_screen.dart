@@ -1,10 +1,10 @@
-import 'package:app_segna_ore/widgets/actiontype_list.dart';
-import 'package:app_segna_ore/widgets/loading_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../providers/actiontype.dart';
 import '../../providers/actiontypes.dart';
+
+import '../../widgets/lists/actiontype_list.dart';
+import '../../widgets/loading_indicator.dart';
 
 class ActionTypeListScreen extends StatelessWidget {
   static const routeName = '/search-list';
@@ -15,9 +15,6 @@ class ActionTypeListScreen extends StatelessWidget {
       await Provider.of<ActionTypes>(context, listen: false)
           .fetchAndSetActiontypes();
     }
-
-    final actionTypeData = Provider.of<ActionTypes>(context, listen: false);
-    final actiontypes = actionTypeData.actionTypes;
 
     return Scaffold(
       appBar: AppBar(

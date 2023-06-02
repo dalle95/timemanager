@@ -1,16 +1,13 @@
-import 'package:app_segna_ore/providers/box.dart';
-import 'package:app_segna_ore/screens/detail/box_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/boxes.dart';
 
-import '../detail/task_detail.dart';
+import '../../screens/detail/box_detail_screen.dart';
 
 import '../../widgets/loading_indicator.dart';
 import '../../widgets/badge.dart';
-import '../../widgets/main_drawer.dart';
-import '../../widgets/box_list.dart';
+import '../../widgets/lists/box_list.dart';
 
 class BoxListScreen extends StatelessWidget {
   static const routeName = '/box-list';
@@ -22,15 +19,15 @@ class BoxListScreen extends StatelessWidget {
     }
 
     var functionData =
-        ModalRoute.of(context).settings.arguments as Map<String, dynamic>;
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     var function = functionData['function'];
 
     return Scaffold(
       appBar: AppBar(
         title: Consumer<Boxes>(
-            builder: (_, box, ch) => Badge(
-                  child: ch,
+            builder: (_, box, ch) => BadgeWidget(
                   value: box.itemCount.toString(),
+                  child: ch!,
                 ),
             child: const Text('Punti di struttura')),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -43,7 +40,6 @@ class BoxListScreen extends StatelessWidget {
           ),
         ],
       ),
-      drawer: function == 'list' ? MainDrawer() : null,
       body: RefreshIndicator(
         onRefresh: () => _refreshProducts(context),
         child: FutureBuilder(
@@ -77,7 +73,8 @@ class BoxListScreen extends StatelessWidget {
                     'statusCode': ''
                   },
                 );
-              })
+              },
+            )
           : null,
     );
   }

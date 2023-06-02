@@ -1,56 +1,70 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:app_segna_ore/providers/actor.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:logger/logger.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 
-import '../models/http_exception.dart';
+import '../models/actor.dart';
+import '../errors/http_exception.dart';
 
 class Auth with ChangeNotifier {
-  String _urlAmbiente;
-  String _token;
-  Actor _user;
+  String? _urlAmbiente;
+  String? _token;
+  Actor? _user;
 
-  DateTime _expiryDate;
-  Timer _authTimer;
+  DateTime? _expiryDate;
+  Timer? _authTimer;
 
+  // Per gestire i log
+  var logger = Logger();
+
+// Controllo se l'utente è loggato
   bool get isAuth {
     return _token != null;
   }
 
-  String get urlAmbiente {
+  // Recupero dell'url ambiente
+  String? get urlAmbiente {
     return _urlAmbiente;
   }
 
-  Actor get user {
+  // Recupero dell'utente collegato
+  Actor? get user {
     return _user;
   }
 
-  String get token {
+  // Recupero del token di autenticazione
+  String? get token {
     if (_expiryDate != null &&
-        _expiryDate.isAfter(DateTime.now()) &&
+        _expiryDate!.isAfter(DateTime.now()) &&
         _token != null) {
       return _token;
     }
     return null;
   }
 
+  // Funzione di autenticazione
   Future<void> _authenticate(
     String urlAmbiente,
     String username,
     String password,
   ) async {
-    var url = Uri.parse(
-        '$urlAmbiente/api/auth/v1/authenticate?login=$username&password=$password&origin=Postman_SCA'); // Per eseguire l'autenticazione
+    logger.d("Funzione authenticate");
+
+    // Chiamata per autenticare l'utente richiedendo il token
     try {
+      var url = Uri.parse(
+          '$urlAmbiente/api/auth/v1/authenticate?login=$username&password=$password&origin=Postman_SCA'); // Per eseguire l'autenticazione
+
       var response = await http.post(url);
 
+      // Gestione errore credenziali
       if (response.statusCode >= 400) {
         throw HttpException('Le credenziali non sono valide');
       }
 
-      print(json.decode(response.body));
+      logger.d(json.decode(response.body));
 
       var responseData = json.decode(response.body);
 
@@ -60,100 +74,125 @@ class Auth with ChangeNotifier {
         const Duration(seconds: 432000),
       );
 
+      // Chiamata per estrarre le informazioni utente
       try {
         url = Uri.parse(
-            '$urlAmbiente/api/entities/v1/user?filter[login]=$username');
+            '$urlAmbiente/api/entities/v1/user?include=actor&filter[login]=$username');
         response = await http.get(
           url,
           headers: {
-            "X-CS-Access-Token": _token,
-          },
-        );
-        responseData = json.decode(response.body);
-        //print(responseData);
-
-        var url_actor = Uri.parse(responseData['data'][0]['relationships']
-            ['actor']['links']['related']);
-        response = await http.get(
-          url_actor,
-          headers: {
-            "X-CS-Access-Token": _token,
+            "X-CS-Access-Token": _token!,
           },
         );
         responseData = json.decode(response.body);
 
-        var actorID = responseData['data']['id'];
-        var actorNome = responseData['data']['attributes']['fullName'];
+        logger.d(responseData);
 
+        // Recupero dell'attore associato e definizione delle informazioni
+        var actorID = responseData['included'][0]['id'];
+        var actorNome = responseData['included'][0]['attributes']['fullName'];
+        var actorCode = responseData['included'][0]['attributes']['code'];
+        var technicianID;
+
+        // Chiamata per estrarre il tecnico
         var url_technician = Uri.parse(
-            '$urlAmbiente/api/entities/v1/technician?filter[code]=$username');
+            '$urlAmbiente/api/entities/v1/technician?filter[code]=$actorCode');
         response = await http.get(
           url_technician,
           headers: {
-            "X-CS-Access-Token": _token,
+            "X-CS-Access-Token": _token!,
           },
         );
+
         responseData = json.decode(response.body);
 
-        var technicianID = responseData['data'][0]['id'];
+        logger.d(responseData);
 
+        // Recupero il tecnico collegato
+        technicianID = responseData['data'][0]['id'];
+
+        // Definisco l'utente
         _user = Actor(
           id: actorID,
-          code: username,
+          code: actorCode,
           nome: actorNome,
           tecnicoID: technicianID,
         );
 
         notifyListeners();
       } catch (error) {
-        print(error);
+        logger.d(error);
         throw error;
       }
       notifyListeners();
       _autoLogout();
 
-      print(
-          'Autenticazione: Token: $_token, ActorID: ${_user.id}, ActorCode: ${_user.code}, AmbienteUrl: $_urlAmbiente, Data scadenza: ${_expiryDate.toString()}');
+      logger.d(
+        'Autenticazione: Token: $_token, ActorID: ${_user!.id}, ActorCode: ${_user!.code}, AmbienteUrl: $_urlAmbiente, Data scadenza: ${_expiryDate.toString()}',
+      );
 
-      final prefs = await SharedPreferences.getInstance();
+      // Preparo l'istanza FlutterSecureStorage per salvare i dati di autenticazione
+      final storage = const FlutterSecureStorage();
+
       final userData = json.encode(
         {
           'url': _urlAmbiente,
           'token': _token,
           'user': {
-            'id': _user.id,
-            'code': _user.code,
-            'nome': _user.nome,
-            'tecnicoID': _user.tecnicoID,
+            'id': _user!.id,
+            'code': _user!.code,
+            'nome': _user!.nome,
+            'tecnicoID': _user!.tecnicoID,
           },
-          'expiryDate': _expiryDate.toIso8601String(),
+          'expiryDate': _expiryDate!.toIso8601String(),
         },
       );
-      print(userData);
+      logger.d(userData);
 
-      prefs.setString('userData', userData);
+      // Salvo i dati di autenticazione
+      await storage.write(key: 'userData', value: userData);
+
+      logger.d('Credenziali salvate');
     } catch (error) {
       throw error;
     }
   }
 
+  // Funzione di login
   Future<void> login(
       String urlAmbiente, String username, String password) async {
     return _authenticate(urlAmbiente, username, password);
   }
 
+  // Funzione per il login automatico all'apertura dell'app
   Future<bool> tryAutoLogin() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!prefs.containsKey('userData')) {
+    logger.d('Funzione tryAutoLogin');
+
+    // Preparo l'istanza FlutterSecureStorage per recuperare i dati di autenticazione
+    final storage = const FlutterSecureStorage();
+
+    if (!await storage.containsKey(key: 'userData')) {
+      logger.d('Nessun dato sul dispositivo');
       return false;
     }
+
+    logger.d('Dati trovati');
+
+    // Estrazione dei dati
     final extractedUserData =
-        json.decode(prefs.getString('userData')) as Map<String, Object>;
-    print('Dati sul dispositivo: ${json.decode(prefs.getString('userData'))}');
+        json.decode(await storage.read(key: 'userData') ?? '')
+            as Map<String, dynamic>;
+
+    logger.d(
+      'Dati sul dispositivo: ${json.decode(await storage.read(key: 'userData') ?? '')}',
+    );
+
     final expiryDate = DateTime.parse(extractedUserData['expiryDate']);
     if (expiryDate.isBefore(DateTime.now())) {
       return false;
     }
+
+    // Definizione dati di autenticazione
     _urlAmbiente = extractedUserData['url'];
     _token = extractedUserData['token'];
     Map utente = extractedUserData['user'];
@@ -170,20 +209,29 @@ class Auth with ChangeNotifier {
     return true;
   }
 
+  // Funzione per la disconnessione
   void logoout() async {
-    _urlAmbiente = null;
+    logger.d('Funzione logout');
+    // Inizializzo le variabili di autenticazione come nulle
+    _urlAmbiente = '';
     _token = null;
     _user = Actor(
-      id: null,
+      id: '',
       code: '',
       nome: '',
+      tecnicoID: '',
     );
     _expiryDate = null;
+
+    // Se è attivo un timer lo elimino
     if (_authTimer != null) {
-      _authTimer.cancel();
+      _authTimer!.cancel();
       _authTimer = null;
     }
-    final prefs = await SharedPreferences.getInstance();
+
+    // Preparo l'istanza FlutterSecureStorage per aggiornare i dati di autenticazione
+    final storage = const FlutterSecureStorage();
+
     final userData = json.encode(
       {
         'url': null,
@@ -192,15 +240,19 @@ class Auth with ChangeNotifier {
         'expiryDate': null,
       },
     );
-    prefs.setString('userData', userData);
+
+    // Aggiorno i dati di autenticazione
+    storage.write(key: 'userData', value: userData);
+
     notifyListeners();
   }
 
+  // Funzione per la disconnessione automatica allo scadere del token
   void _autoLogout() {
     if (_authTimer != null) {
-      _authTimer.cancel();
+      _authTimer!.cancel();
     }
-    final timeToExpiry = _expiryDate.difference(DateTime.now()).inSeconds;
+    final timeToExpiry = _expiryDate!.difference(DateTime.now()).inSeconds;
     _authTimer = Timer(Duration(seconds: timeToExpiry), logoout);
   }
 }

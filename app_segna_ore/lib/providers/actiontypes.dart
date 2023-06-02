@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '../providers/actiontype.dart';
+import '../models/actiontype.dart';
 
 class ActionTypes with ChangeNotifier {
   final String authToken;
@@ -13,6 +13,7 @@ class ActionTypes with ChangeNotifier {
 
   ActionTypes(this.urlAmbiente, this.authToken, this._actiontypes);
 
+  // Definisco il metodo per recuerare la lista di nature
   List<ActionType> get actionTypes {
     return [..._actiontypes];
   }
@@ -34,18 +35,21 @@ class ActionTypes with ChangeNotifier {
 
   // Funzione per estrarre le nature tramite richiesta get
   Future<void> fetchAndSetActiontypes() async {
-    final url = Uri.parse(
-        '$urlAmbiente/api/entities/v1/actiontype?filter[actionGroup]=PREV');
+    // Inizializzo la lista di nature
+    final List<ActionType> loadedActionTypes = [];
 
+    // Chiamata get per estrazione delle nature
     try {
+      final url = Uri.parse(
+          '$urlAmbiente/api/entities/v1/actiontype?filter[actionGroup]=PREV');
       var response = await http.get(
         url,
         headers: {
           "X-CS-Access-Token": authToken,
         },
       );
+      // Estraggo i dati
       var extractedData = json.decode(response.body) as Map<String, dynamic>;
-      final List<ActionType> loadedActionTypes = [];
 
       if (extractedData['data'] == null) {
         return;
@@ -60,12 +64,13 @@ class ActionTypes with ChangeNotifier {
               description: actiontype['attributes']['description'],
             ),
           );
-          _actiontypes = loadedActionTypes;
-          notifyListeners();
         },
       );
     } catch (error) {
-      throw error;
+      rethrow;
+    } finally {
+      _actiontypes = loadedActionTypes;
+      notifyListeners();
     }
   }
 }

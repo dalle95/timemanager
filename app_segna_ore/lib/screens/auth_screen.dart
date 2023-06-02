@@ -1,15 +1,11 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/http_exception.dart';
-import '../providers/auth.dart';
-import '../widgets/flat_button.dart';
-import '../widgets/loading_indicator.dart';
-import '../widgets/raise_button.dart';
+import '../urlAmbiente.dart';
 
-enum AuthMode { Signup, Login }
+import '../errors/http_exception.dart';
+import '../providers/auth.dart';
+import '../widgets/loading_indicator.dart';
 
 class AuthScreen extends StatelessWidget {
   static const routeName = '/auth';
@@ -35,45 +31,13 @@ class AuthScreen extends StatelessWidget {
             ),
           ),
           SingleChildScrollView(
-            child: Container(
+            child: SizedBox(
               height: deviceSize.height,
               width: deviceSize.width,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  // Flexible(
-                  //   child: Container(
-                  //     width: deviceSize.width * 0.75,
-                  //     margin: const EdgeInsets.all(10.0),
-                  //     padding: const EdgeInsets.symmetric(
-                  //         vertical: 8.0, horizontal: 50.0),
-                  //     // transform: Matrix4.rotationZ(-8 * pi / 180)
-                  //     //   ..translate(-10.0),
-                  //     // ..translate(-10.0),
-                  //     decoration: BoxDecoration(
-                  //       borderRadius: BorderRadius.circular(10),
-                  //       color: Theme.of(context).colorScheme.secondary,
-                  //       boxShadow: const [
-                  //         BoxShadow(
-                  //           blurRadius: 8,
-                  //           color: Colors.black26,
-                  //           offset: Offset(0, 2),
-                  //         )
-                  //       ],
-                  //     ),
-                  //     child: const Text(
-                  //       'Time Manager',
-                  //       textAlign: TextAlign.center,
-                  //       style: TextStyle(
-                  //         color: Colors.white,
-                  //         fontSize: 25,
-                  //         //fontFamily: 'Anton',
-                  //         fontWeight: FontWeight.bold,
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
                   Flexible(
                     flex: deviceSize.width > 600 ? 2 : 1,
                     child: const AuthCard(),
@@ -90,7 +54,7 @@ class AuthScreen extends StatelessWidget {
 
 class AuthCard extends StatefulWidget {
   const AuthCard({
-    Key key,
+    Key? key,
   }) : super(key: key);
 
   @override
@@ -102,7 +66,7 @@ class _AuthCardState extends State<AuthCard> {
 
   //AuthMode _authMode = AuthMode.Login;
   final Map<String, String> _authData = {
-    'url': 'https://ticketing.in-am.it/gmaoCS02',
+    'url': url.urlAmbiente,
     'username': '',
     'password': '',
   };
@@ -116,11 +80,11 @@ class _AuthCardState extends State<AuthCard> {
         title: const Text('Si è verificato un errore'),
         content: Text(message),
         actions: [
-          FlatButton(
-            () {
+          TextButton(
+            onPressed: () {
               Navigator.of(context).pop();
             },
-            const Text('Conferma'),
+            child: const Text('Conferma'),
           )
         ],
       ),
@@ -128,11 +92,11 @@ class _AuthCardState extends State<AuthCard> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState.validate()) {
+    if (!_formKey.currentState!.validate()) {
       // Invalid!
       return;
     }
-    _formKey.currentState.save();
+    _formKey.currentState!.save();
 
     setState(() {
       _isLoading = true;
@@ -141,22 +105,19 @@ class _AuthCardState extends State<AuthCard> {
     try {
       // Log user in
       await Provider.of<Auth>(context, listen: false).login(
-        'https://ticketing.in-am.it/gmaoCS02',
-        _authData['username'],
-        _authData['password'],
+        url.urlAmbiente,
+        _authData['username']!,
+        _authData['password']!,
       );
     } on HttpException catch (error) {
       // Errore durante il log in
-      print(error.toString());
       _showErrorDialog(error.toString());
     } catch (error) {
       var errorMessage =
           'Non è possibile esesguire l\'autenticazione, prova più tardi.';
+      _showErrorDialog(error.toString());
+      throw errorMessage;
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   @override
@@ -187,36 +148,19 @@ class _AuthCardState extends State<AuthCard> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  // TextFormField(
-                  //   initialValue: 'https://ticketing.in-am.it/gmaoCS02',
-                  //   decoration: const InputDecoration(
-                  //       labelText: 'URL ambiente',
-                  //       contentPadding: EdgeInsets.zero),
-                  //   keyboardType: TextInputType.name,
-                  //   textAlign: TextAlign.center,
-                  //   validator: (value) {
-                  //     if (value.isEmpty) {
-                  //       return 'URL invalido!';
-                  //     }
-                  //     return null;
-                  //   },
-                  //   onSaved: (value) {
-                  //     _authData['url'] = value;
-                  //   },
-                  // ),
                   TextFormField(
                     decoration: const InputDecoration(
                         labelText: 'Login', contentPadding: EdgeInsets.zero),
                     keyboardType: TextInputType.name,
                     textAlign: TextAlign.center,
                     validator: (value) {
-                      if (value.isEmpty) {
+                      if (value!.isEmpty) {
                         return 'Nome invalido!';
                       }
                       return null;
                     },
                     onSaved: (value) {
-                      _authData['username'] = value;
+                      _authData['username'] = value!;
                     },
                   ),
                   TextFormField(
@@ -227,13 +171,13 @@ class _AuthCardState extends State<AuthCard> {
                     textAlign: TextAlign.center,
                     controller: _passwordController,
                     validator: (value) {
-                      if (value.isEmpty) {
+                      if (value!.isEmpty) {
                         return 'La password non può essere nulla!';
                       }
                       return null;
                     },
                     onSaved: (value) {
-                      _authData['password'] = value;
+                      _authData['password'] = value!;
                     },
                     onFieldSubmitted: (_) {
                       _submit();
@@ -245,15 +189,14 @@ class _AuthCardState extends State<AuthCard> {
                   if (_isLoading)
                     LoadingIndicator('Caricamento')
                   else
-                    RaiseButton(
-                      _submit,
-                      const Text(
+                    ElevatedButton(
+                      onPressed: _submit,
+                      child: const Text(
                         'Connessione',
                         style: TextStyle(
                           fontSize: 20,
                         ),
                       ),
-                      Theme.of(context).colorScheme.secondary,
                     ),
                 ],
               ),

@@ -1,14 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:app_segna_ore/providers/workflow_transitions.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:logger/logger.dart';
 
-import '../providers/task.dart';
-import '../providers/actiontype.dart';
-import '../providers/box.dart';
-import '../providers/material.dart' as carl;
+import '../models/task.dart';
+import '../models/actiontype.dart';
+import '../models/box.dart';
+import '../models/material.dart' as carl;
+import '../models/workflow_transitions.dart';
 
 class Tasks with ChangeNotifier {
   final String authToken;
@@ -18,6 +19,9 @@ class Tasks with ChangeNotifier {
   List<Task> _tasks = [];
 
   Tasks(this.urlAmbiente, this.authToken, this.userId, this._tasks);
+
+  // Per gestire i log
+  var logger = Logger();
 
   // Lista delle task
   List<Task> get tasks {
@@ -66,8 +70,6 @@ class Tasks with ChangeNotifier {
       }
 
       // Iterazione per ogni risultato
-      //extractedData['data'].forEach(
-      //(wo) async {
       for (var wo in extractedData['included']) {
         if (wo['attributes']['statusCode'] == 'AWAITINGREAL' ||
             wo['attributes']['statusCode'] == 'INPROGRESS' ||
@@ -78,13 +80,6 @@ class Tasks with ChangeNotifier {
             code: null,
             description: null,
           );
-
-          // Per estrazione della natura controllo l'uguaglianza dell'ID con quello nell'include
-          // for (var
-          // wo in extractedData['included']) {
-          // if (actiontype['id'] ==
-          //     wo['relationships']['actionType']['data']['id']) {
-          // Definizione natura
 
           // Definizione Url actionType
           var actionTypeUrl =
@@ -106,10 +101,6 @@ class Tasks with ChangeNotifier {
             code: actionTypeData['data']['attributes']['code'],
             description: actionTypeData['data']['attributes']['description'],
           );
-
-          // break;
-          // }
-          // }
 
           // Inizializzazione del BOX  e material vuoto
           var boxLocation = Box(
@@ -138,7 +129,7 @@ class Tasks with ChangeNotifier {
               headers: headers,
             );
 
-            print(woEqptUrl);
+            logger.d(woEqptUrl);
 
             // Estrazione risultati
             var woEqptData =
@@ -209,35 +200,7 @@ class Tasks with ChangeNotifier {
             // Inizializzo la lista di transizioni come lista vuota
             List<WorkflowTransitions> listWorkflowTransitions = [];
 
-            // Definizione url worktransition
-            // var workfloTransitionsUrl =
-            //     Uri.parse(wo['links']['workflow-transitions'].toString());
-            // try {
-            //   // Creazione chiamata worktransition
-            //   var workfloTransitionResponse = await http.get(
-            //     workfloTransitionsUrl,
-            //     headers: headers,
-            //   );
-            //   // Estrazione risultati
-            //   var workfloTransitionData =
-            //       json.decode(workfloTransitionResponse.body) as dynamic;
-            //   // Iterazione per ogni risulato
-            //   workfloTransitionData['data'].forEach(
-            //     (wt) {
-            //       // Definizione worktransition
-            //       var workflowTransition = WorkflowTransitions(
-            //         id: wt['id'],
-            //         statusCode: wt['attributes']['nextStepCode'],
-            //       );
-            //       // Aggiunta transizioni alla lista workflowtransitions
-            //       listWorkflowTransitions.add(workflowTransition);
-            //     },
-            //   );
-            // } catch (error) {
-            //   throw error;
-            // }
-
-            print(
+            logger.d(
                 'wo_code: ${wo['attributes']['code']}, actiontype_code: ${actionType.code}, box_code: ${boxLocation.code}');
 
             // Aggiunta Task alla lista
@@ -253,7 +216,8 @@ class Tasks with ChangeNotifier {
                 commessa: material,
                 note: wo['attributes']['xtraTxt10'],
                 stima: Duration(
-                    minutes: (wo['attributes']['expTime'] ?? 0 * 60).toInt()),
+                  minutes: (wo['attributes']['expTime'] ?? 0 * 60).toInt(),
+                ),
                 dataInizio: DateTime.parse(wo['attributes']['WOBegin']),
                 dataFine: DateTime.parse(wo['attributes']['WOEnd']),
                 workflowTransitions: listWorkflowTransitions,
@@ -270,7 +234,7 @@ class Tasks with ChangeNotifier {
       //   },
       // );
     } catch (error) {
-      print(error.toString());
+      logger.d(error.toString());
       throw error;
     } finally {
       // Aggiornamento lista
@@ -279,11 +243,11 @@ class Tasks with ChangeNotifier {
     }
 
     DateTime end = DateTime.now();
-    print(end.difference(init).inMilliseconds);
+    logger.d(end.difference(init).inMilliseconds);
   }
 
   Future<void> addTask(Task task, {int index = 0}) async {
-    print('Funzione addTask');
+    logger.d('Funzione addTask');
 
     // Preparo l'header
     Map<String, String> headers = {
@@ -304,9 +268,9 @@ class Tasks with ChangeNotifier {
           url,
           headers: headers,
         );
-        //print(response.body);
 
-        print('Stato GET wo: ${json.decode(response.statusCode.toString())}');
+        logger
+            .d('Stato GET wo: ${json.decode(response.statusCode.toString())}');
 
         if (response.statusCode >= 400) {
           throw HttpException(
@@ -316,12 +280,9 @@ class Tasks with ChangeNotifier {
           // Estrazione Tasks
           var extractedData =
               json.decode(response.body) as Map<String, dynamic>;
-          for (var wo in extractedData['data']) {
-            numero++;
-          }
+          numero = extractedData['data'].length + 1;
         }
       } catch (error) {
-        //print(error);
         throw error;
       }
 
@@ -334,7 +295,7 @@ class Tasks with ChangeNotifier {
       final urlEquipment = Uri.parse('$urlAmbiente/api/entities/v1/woeqpt');
 
       final dataWO = json.encode(
-        task.commessa.responsabile.id == null
+        task.commessa!.responsabile!.id == null
             ? {
                 'data': {
                   'type': 'wo',
@@ -345,24 +306,18 @@ class Tasks with ChangeNotifier {
                     'workPriority': task.priority,
                     'xtraTxt10': task.note,
                     'WOBegin':
-                        "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
+                        "${task.dataInizio!.toIso8601String().substring(0, 23)}+01:00",
                     'WOEnd':
-                        "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
-                    'expTime': (task.stima.inMinutes / 60)
+                        "${task.dataFine!.toIso8601String().substring(0, 23)}+01:00",
+                    'expTime': (task.stima!.inMinutes / 60)
                   },
                   'relationships': {
                     "actionType": {
                       "data": {
                         "type": "actiontype",
-                        "id": task.actionType.id,
+                        "id": task.actionType!.id,
                       }
                     },
-                    // "costCenter": {
-                    //   "data": {
-                    //     "type": "costcenter",
-                    //     "id": "177fed5ef2f-2ab4",
-                    //   }
-                    // }
                   }
                 }
               }
@@ -376,22 +331,22 @@ class Tasks with ChangeNotifier {
                     'workPriority': task.priority,
                     'xtraTxt10': task.note,
                     'WOBegin':
-                        "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
+                        "${task.dataInizio!.toIso8601String().substring(0, 23)}+01:00",
                     'WOEnd':
-                        "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
-                    'expTime': (task.stima.inMinutes / 60)
+                        "${task.dataFine!.toIso8601String().substring(0, 23)}+01:00",
+                    'expTime': (task.stima!.inMinutes / 60)
                   },
                   'relationships': {
                     "actionType": {
                       "data": {
                         "type": "actiontype",
-                        "id": task.actionType.id,
+                        "id": task.actionType!.id,
                       }
                     },
                     "supervisor": {
                       "data": {
                         "type": "actor",
-                        "id": task.commessa.responsabile.id,
+                        "id": task.commessa!.responsabile!.id,
                       }
                     }
                   }
@@ -399,9 +354,6 @@ class Tasks with ChangeNotifier {
               },
       );
 
-      //print(dataWO);
-
-      //print(url);
       try {
         // Chiamata per creare il WO
         final response = await http.post(
@@ -409,10 +361,9 @@ class Tasks with ChangeNotifier {
           body: dataWO,
           headers: headers,
         );
-        //print(response.body);
-        print(response.body);
+        logger.d(response.body);
 
-        print('Stato wo: ${json.decode(response.statusCode.toString())}');
+        logger.d('Stato wo: ${json.decode(response.statusCode.toString())}');
 
         if (response.statusCode >= 400) {
           throw HttpException(
@@ -422,7 +373,7 @@ class Tasks with ChangeNotifier {
           task.id = json.decode(response.body)['data']['id'];
         }
       } catch (error) {
-        //print(error);
+        //logger.d(error);
         throw error;
       }
 
@@ -443,7 +394,7 @@ class Tasks with ChangeNotifier {
                 "data": {"type": "wo", "id": task.id}
               },
               "eqpt": {
-                "data": {"type": "box", "id": task.cliente.id}
+                "data": {"type": "box", "id": task.cliente!.id}
               }
             }
           }
@@ -467,14 +418,14 @@ class Tasks with ChangeNotifier {
                 "data": {"type": "wo", "id": task.id}
               },
               "eqpt": {
-                "data": {"type": "material", "id": task.commessa.id}
+                "data": {"type": "material", "id": task.commessa!.id}
               }
             }
           }
         },
       );
 
-      if (task.cliente.id != null) {
+      if (task.cliente!.id != null) {
         try {
           // Chiamata per creare il legame con WO-cliente
           final responseBox = await http.post(
@@ -483,7 +434,7 @@ class Tasks with ChangeNotifier {
             headers: headers,
           );
 
-          print('Stato box: ${responseBox.statusCode}');
+          logger.d('Stato box: ${responseBox.statusCode}');
 
           if (responseBox.statusCode >= 400) {
             throw HttpException(
@@ -491,12 +442,12 @@ class Tasks with ChangeNotifier {
             );
           }
         } catch (error) {
-          print(error);
+          logger.d(error);
           throw error;
         }
       }
 
-      if (task.commessa.id != null) {
+      if (task.commessa!.id != null) {
         try {
           // Chiamata per creare il legame con WO-commessa
           final responseMaterial = await http.post(
@@ -505,7 +456,7 @@ class Tasks with ChangeNotifier {
             headers: headers,
           );
 
-          print('Stato material: ${responseMaterial.statusCode}');
+          logger.d('Stato material: ${responseMaterial.statusCode}');
 
           if (responseMaterial.statusCode >= 400) {
             throw HttpException(
@@ -515,7 +466,7 @@ class Tasks with ChangeNotifier {
             );
           }
         } catch (error) {
-          print(error);
+          logger.d(error);
           throw error;
         }
       }
@@ -534,12 +485,10 @@ class Tasks with ChangeNotifier {
         id: task.id,
       );
 
-      //print(json.decode(response.body)['data']['id']);
-
       _tasks.insert(index, newTask);
       notifyListeners();
     } catch (error) {
-      //print(error);
+      //logger.d(error);
       throw error;
     }
   }
@@ -567,24 +516,18 @@ class Tasks with ChangeNotifier {
             'workPriority': newTask.priority,
             'xtraTxt10': newTask.note,
             'WOBegin':
-                "${newTask.dataInizio.toIso8601String().substring(0, 23)}+01:00",
+                "${newTask.dataInizio!.toIso8601String().substring(0, 23)}+01:00",
             'WOEnd':
-                "${newTask.dataFine.toIso8601String().substring(0, 23)}+01:00",
-            'expTime': (newTask.stima.inMinutes / 60)
+                "${newTask.dataFine!.toIso8601String().substring(0, 23)}+01:00",
+            'expTime': (newTask.stima!.inMinutes / 60)
           },
           'relationships': {
             "actionType": {
               "data": {
                 "type": "actiontype",
-                "id": newTask.actionType.id,
+                "id": newTask.actionType!.id,
               }
             },
-            // "costCenter": {
-            //   "data": {
-            //     "type": "costcenter",
-            //     "id": "177fed5ef2f-2ab4",
-            //   }
-            // }
           }
         }
       },
@@ -606,7 +549,7 @@ class Tasks with ChangeNotifier {
               "data": {"type": "wo", "id": newTask.id}
             },
             "eqpt": {
-              "data": {"type": "box", "id": newTask.cliente.id}
+              "data": {"type": "box", "id": newTask.cliente!.id}
             }
           }
         }
@@ -621,7 +564,7 @@ class Tasks with ChangeNotifier {
           headers: headers,
         );
 
-        print('Stato update wo: ${response.statusCode}');
+        logger.d('Stato update wo: ${response.statusCode}');
 
         if (response.statusCode >= 400) {
           throw HttpException(
@@ -630,9 +573,9 @@ class Tasks with ChangeNotifier {
         }
 
         // Se il nuovo WO ha un box non nullo
-        if (newTask.cliente.id != null) {
+        if (newTask.cliente!.id != null) {
           // Se il nuovo WO ha un box non nullo e il WO precendente aveva già associato un box
-          if (newTask.cliente.id != null && initTask.cliente.id != null) {
+          if (newTask.cliente!.id != null && initTask.cliente!.id != null) {
             final url =
                 Uri.parse('$urlAmbiente/api/entities/v1/wo/$id/equipments');
             final responseWoEqpt = await http.get(
@@ -662,7 +605,7 @@ class Tasks with ChangeNotifier {
               headers: headers,
             );
 
-            print('Stato box update: ${responseEquipment.statusCode}');
+            logger.d('Stato box update: ${responseEquipment.statusCode}');
 
             if (response.statusCode >= 400) {
               throw HttpException(
@@ -673,14 +616,14 @@ class Tasks with ChangeNotifier {
             }
           }
           // Se il nuovo WO ha un box associato e il WO precedente non aveva un box associato
-          if (newTask.cliente.id != null && initTask.cliente.id == null) {
+          if (newTask.cliente!.id != null && initTask.cliente!.id == null) {
             final responseEquipment = await http.post(
               urlEquipment,
               body: dataBox,
               headers: headers,
             );
 
-            print('Stato box insert: ${responseEquipment.statusCode}');
+            logger.d('Stato box insert: ${responseEquipment.statusCode}');
 
             if (response.statusCode >= 400) {
               throw HttpException(
@@ -701,7 +644,6 @@ class Tasks with ChangeNotifier {
 
           var woeqptData =
               json.decode(responseWoEqpt.body) as Map<String, dynamic>;
-          //print(woeqptData);
 
           if (response.statusCode >= 400) {
             throw HttpException(
@@ -716,13 +658,12 @@ class Tasks with ChangeNotifier {
 
                 final urlDeleteWoEqpt =
                     Uri.parse('$urlAmbiente/api/entities/v1/woeqpt/$idWoEqpt');
-                //print(urlDeleteWoEqpt);
 
                 final responseDeleteWoEqpt = await http.delete(
                   urlDeleteWoEqpt,
                   headers: headers,
                 );
-                print('Stato delete: ${responseDeleteWoEqpt.statusCode}');
+                logger.d('Stato delete: ${responseDeleteWoEqpt.statusCode}');
 
                 if (response.statusCode >= 400) {
                   throw HttpException(
@@ -742,15 +683,15 @@ class Tasks with ChangeNotifier {
         throw error;
       }
     } else {
-      print('...');
+      logger.d('...');
     }
   }
 
   Future<void> passaggioStatoTask(
       Task task, String statoNew, String statoOdl) async {
-    print('Funzione passaggioStatoTask');
+    logger.d('Funzione passaggioStatoTask');
 
-    String transizioneId;
+    String? transizioneId;
 
     // Preparo l'header
     Map<String, String> headers = {
@@ -783,9 +724,8 @@ class Tasks with ChangeNotifier {
       },
     );
 
-    print(data);
+    logger.d(data);
 
-    //print(url);
     try {
       // Chiamata per effettuare il passaggio di stato
       final response = await http.post(
@@ -794,7 +734,7 @@ class Tasks with ChangeNotifier {
         headers: headers,
       );
 
-      print(
+      logger.d(
           'Stato passaggio di stato: ${json.decode(response.statusCode.toString())}');
 
       if (response.statusCode >= 400) {
@@ -807,7 +747,7 @@ class Tasks with ChangeNotifier {
 
       notifyListeners();
     } catch (error) {
-      print(error);
+      logger.d(error);
       throw error;
     }
   }
@@ -820,21 +760,21 @@ class Tasks with ChangeNotifier {
       "Content-Type": "application/vnd.api+json",
     };
 
-    print('task date: ${task.dataInizio}');
-    print('occupation date: ${dataOccupation}');
+    logger.d('task date: ${task.dataInizio}');
+    logger.d('occupation date: ${dataOccupation}');
 
     final woIndex = _tasks.indexWhere((wo) => wo.id == id);
 
     final url = Uri.parse('$urlAmbiente/api/entities/v1/wo/$id');
 
-    if (task.dataInizio.isAfter(dataOccupation)) {
+    if (task.dataInizio!.isAfter(dataOccupation)) {
       task.dataInizio = DateTime(
         dataOccupation.year,
         dataOccupation.month,
         dataOccupation.day,
         8,
       );
-    } else if (task.dataFine.isBefore(dataOccupation)) {
+    } else if (task.dataFine!.isBefore(dataOccupation)) {
       task.dataFine = DateTime(
         dataOccupation.year,
         dataOccupation.month,
@@ -848,31 +788,12 @@ class Tasks with ChangeNotifier {
         'data': {
           'type': 'wo',
           'attributes': {
-            // 'code': task.code,
-            // 'description': task.description,
-            // 'statusCode': task.statusCode,
-            // 'workPriority': task.priority,
-            // 'xtraTxt10': task.note,
             'WOBegin':
-                "${task.dataInizio.toIso8601String().substring(0, 23)}+01:00",
+                "${task.dataInizio!.toIso8601String().substring(0, 23)}+01:00",
             'WOEnd':
-                "${task.dataFine.toIso8601String().substring(0, 23)}+01:00",
-            'expTime': (task.stima.inMinutes / 60)
+                "${task.dataFine!.toIso8601String().substring(0, 23)}+01:00",
+            'expTime': (task.stima!.inMinutes / 60)
           },
-          // 'relationships': {
-          //   "actionType": {
-          //     "data": {
-          //       "type": "actiontype",
-          //       "id": task.actionType.id,
-          //     }
-          //   },
-          // "costCenter": {
-          //   "data": {
-          //     "type": "costcenter",
-          //     "id": "177fed5ef2f-2ab4",
-          //   }
-          // }
-          // }
         }
       },
     );
@@ -884,7 +805,7 @@ class Tasks with ChangeNotifier {
         headers: headers,
       );
 
-      print('Stato update wo: ${response.statusCode}');
+      logger.d('Stato update wo: ${response.statusCode}');
 
       if (response.statusCode >= 400) {
         throw HttpException(

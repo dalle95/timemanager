@@ -1,17 +1,18 @@
+import 'package:app_segna_ore/widgets/lists/worktime_list.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/worktimes.dart';
 import '../../screens/detail/worktime_detail.dart';
-import '../../widgets/worktime_list.dart';
 import '../../widgets/loading_indicator.dart';
 
 class WorkTimeListScreen extends StatelessWidget {
   static const routeName = '/worktime-list';
 
   Future<void> _refreshWorkTimes(
-      BuildContext context, Map<String, String> filtro) async {
+    BuildContext context,
+    Map<String, String>? filtro,
+  ) async {
     await Provider.of<WorkTimes>(context, listen: false)
         .fetchAndSetFilteredWorkTimes(filtro);
   }
@@ -19,31 +20,21 @@ class WorkTimeListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var functionData =
-        ModalRoute.of(context).settings.arguments as Map<String, dynamic>;
-    var function = functionData['function'];
-    String woID;
-    Map<String, String> filtro;
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    String? woID;
+    Map<String, String>? filtro;
 
     if (functionData.containsKey("filter")) {
       if (functionData['filter'].containsKey("wo_id")) {
         woID = functionData['filter']['wo_id'];
-        filtro = {'wo_id': woID};
+        filtro = {'wo_id': woID!};
       }
-    } else if (functionData.containsKey("periodoCompetenza")) {
-      filtro = {
-        'giornoCompetenza': DateFormat("yyyy-MM-dd")
-            .format(DateTime.parse(functionData['periodoCompetenza']))
-      };
+    } else {
+      filtro = null;
     }
 
     return Scaffold(
       appBar: AppBar(
-        // title: Consumer<Occupations>(
-        //     builder: (_, occupation, ch) => Badge(
-        //           child: ch,
-        //           value: occupation.itemCount.toString(),
-        //         ),
-        //     child: const Text('')),
         title: const Text('Ore caricate'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
@@ -59,7 +50,7 @@ class WorkTimeListScreen extends StatelessWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => _refreshWorkTimes(context, filtro),
+        onRefresh: () => _refreshWorkTimes(context, filtro!),
         child: FutureBuilder(
           future: _refreshWorkTimes(context, filtro),
           builder: (ctx, dataSnapshot) {
@@ -70,7 +61,6 @@ class WorkTimeListScreen extends StatelessWidget {
                 return const Center(
                   child: Text('Si è verificato un errore.'),
                 );
-                //Error
               } else {
                 return WorkTimeList();
               }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/worktimes.dart';
-import '../widgets/statistics_item.dart';
+import 'items/calendario_lavoro_item.dart';
 
 class StatisticsGrid extends StatelessWidget {
   final DateTime mese;
@@ -28,7 +28,7 @@ class StatisticsGrid extends StatelessWidget {
         ),
         itemCount: giorniLavorativi.length,
         itemBuilder: (BuildContext ctx, index) {
-          return StatisticsItem(
+          return CalendarioDiLavoroItem(
             giorniLavorativi[index]['numeroGiorno'],
             giorniLavorativi[index]['oreRegistrate'],
           );

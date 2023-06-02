@@ -1,15 +1,16 @@
-import 'package:app_segna_ore/providers/actiontype.dart';
-import 'package:app_segna_ore/providers/box.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/actiontype.dart';
+import '../../models/box.dart';
+import '../../models/material.dart' as carl;
+
 import '../../providers/tasks.dart';
-import '../../providers/material.dart' as carl;
 import '../detail/task_detail.dart';
 
 import '../../widgets/loading_indicator.dart';
 import '../../widgets/badge.dart';
-import '../../widgets/task_list.dart';
+import '../../widgets/lists/task_list.dart';
 
 class TaskListScreen extends StatelessWidget {
   static const routeName = '/task-list';
@@ -21,15 +22,15 @@ class TaskListScreen extends StatelessWidget {
     }
 
     var functionData =
-        ModalRoute.of(context).settings.arguments as Map<String, dynamic>;
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     var function = functionData['function'];
 
     return Scaffold(
       appBar: AppBar(
         title: Consumer<Tasks>(
-            builder: (_, wo, ch) => Badge(
-                  child: ch,
+            builder: (_, wo, ch) => BadgeWidget(
                   value: wo.itemCount.toString(),
+                  child: ch!,
                 ),
             child: const Text('Attività')),
         backgroundColor: Theme.of(context).colorScheme.primary,

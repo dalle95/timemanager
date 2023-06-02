@@ -1,17 +1,18 @@
 import 'dart:convert';
 
-import 'package:app_segna_ore/models/http_wooccupationdateexception.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:logger/logger.dart';
 
-import '../providers/worktime.dart';
-import '../providers/material.dart' as carl;
-import '../providers/actiontype.dart';
-import '../providers/actor.dart';
-import '../providers/box.dart';
-import '../providers/task.dart';
-import '../models/http_exception.dart';
+import '../models/worktime.dart';
+import '../models/material.dart' as carl;
+import '../models/actiontype.dart';
+import '../models/actor.dart';
+import '../models/box.dart';
+import '../models/task.dart';
+import '../errors/http_exception.dart';
+import '../errors/http_wooccupationdateexception.dart';
 
 class WorkTimes with ChangeNotifier {
   final String authToken;
@@ -22,9 +23,26 @@ class WorkTimes with ChangeNotifier {
 
   WorkTimes(this.urlAmbiente, this.authToken, this.user, this._workTimes);
 
-  // Lista dei WO
+  // Per gestire i log
+  var logger = Logger();
+
+  // Lista dei WorkTime
   List<WorkTime> get workTimes {
     return [..._workTimes];
+  }
+
+  // Lista dei WorkTime giornalieri
+  List<WorkTime> workTimesDaily(DateTime giorno) {
+    logger.d('Filtro WorkTimes giorno: $giorno');
+    return _workTimes
+        .where((workTime) =>
+            DateTime(
+              workTime.data.year,
+              workTime.data.month,
+              workTime.data.day,
+            ) ==
+            giorno)
+        .toList();
   }
 
   // Recupera un WO per ID
@@ -41,9 +59,6 @@ class WorkTimes with ChangeNotifier {
   double oreSegnate(DateTime giorno) {
     double oreSegnate = 0.0;
     for (var index = 0; index < itemCount; index++) {
-      print(DateTime(_workTimes[index].data.year, _workTimes[index].data.month,
-              _workTimes[index].data.day)
-          .toString());
       if (DateTime(_workTimes[index].data.year, _workTimes[index].data.month,
               _workTimes[index].data.day) ==
           DateTime(giorno.year, giorno.month, giorno.day)) {
@@ -109,10 +124,6 @@ class WorkTimes with ChangeNotifier {
       }
     }
 
-    // for (int index = 0; index < caricoXCommessa.length; index++) {
-    //   oreTot = oreTot + caricoXCommessa[index]['oreRegistrate'];
-    // }
-
     // Calcolo la percentuale di carico per ogni commessa nella lista
     for (int index = 0; index < caricoXCommessa.length; index++) {
       caricoXCommessa[index] = {
@@ -131,7 +142,7 @@ class WorkTimes with ChangeNotifier {
   }
 
   // Funzione per estrarre le nature tramite richiesta get
-  Future<void> fetchAndSetWorkTimes([String periodoRiferimento]) async {
+  Future<void> fetchAndSetWorkTimes([String? periodoRiferimento]) async {
     // Inizializzazione lista vuota
     final List<WorkTime> loadedWorkTimes = [];
 
@@ -275,7 +286,7 @@ class WorkTimes with ChangeNotifier {
           }
         }
 
-        print(
+        logger.d(
             'data: ${occupation['attributes']['occupationDate']}, note: ${occupation['attributes']['note']}');
 
         // Aggiunta WorkTime alla lista
@@ -287,30 +298,14 @@ class WorkTimes with ChangeNotifier {
             data: DateTime.parse(occupation['attributes']['occupationDate'])
                 .add(const Duration(hours: 1)),
             tempoFatturato: Duration(
-                    minutes:
-                        (occupation['attributes']['duration'] * 60).toInt()) ??
-                const Duration(
-                  hours: 0,
-                  minutes: 0,
-                ),
-            // tempoFatturato: parseDuration(occupation['attributes']['time02']) ??
-            //     const Duration(
-            //       hours: 0,
-            //       minutes: 0,
-            //     ),
+                minutes: (occupation['attributes']['duration'] * 60).toInt()),
             commessa: material,
             task: task,
           ),
         );
-
-        // Ordino la lista in base al codice del WO
-        //loadedWorkTimes.sort((a, b) => a.data.compareTo(b.data));
-
-        //   },
-        // );
       }
     } catch (error) {
-      print(error.toString());
+      logger.d(error.toString());
       throw error;
     } finally {
       // Aggiorno la lista di WO
@@ -320,7 +315,7 @@ class WorkTimes with ChangeNotifier {
   }
 
   // Funzione per estrarre le nature tramite richiesta get
-  Future<void> fetchAndSetFilteredWorkTimes([Map filtro]) async {
+  Future<void> fetchAndSetFilteredWorkTimes([Map? filtro]) async {
     // Inizializzazione lista vuota
     final List<WorkTime> loadedWorkTimes = [];
 
@@ -329,9 +324,9 @@ class WorkTimes with ChangeNotifier {
       "X-CS-Access-Token": authToken,
     };
 
-    String endpoint;
+    String? endpoint;
 
-    print(filtro);
+    logger.d('Filtro: $filtro');
 
     if (filtro != null) {
       if (filtro.containsKey("wo_id")) {
@@ -346,19 +341,13 @@ class WorkTimes with ChangeNotifier {
         endpoint =
             '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note&include=technician,commessa,WO&filter[technician.code]=${user.code}&filter[occupationDate][LIKE]=$periodoCompetenza&sort=-occupationDate';
       }
-      if (filtro.containsKey("giornoCompetenza")) {
-        String periodoCompetenza = filtro['giornoCompetenza'];
-
-        endpoint =
-            '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note&include=technician,commessa,WO&filter[technician.code]=${user.code}&filter[occupationDate][LIKE]=$periodoCompetenza&sort=-occupationDate';
-      }
     } else {
       endpoint =
           '$urlAmbiente/api/entities/v1/occupation?fields=occupationDate,duration,note&include=technician,commessa,WO&filter[technician.code]=${user.code}&sort=-occupationDate';
     }
 
     // Definizione del link della chiamata
-    var url = Uri.parse(endpoint);
+    var url = Uri.parse(endpoint!);
 
     // Preparazione del try-catch degli errori
     try {
@@ -505,30 +494,14 @@ class WorkTimes with ChangeNotifier {
               0,
             ),
             tempoFatturato: Duration(
-                    minutes:
-                        (occupation['attributes']['duration'] * 60).toInt()) ??
-                const Duration(
-                  hours: 0,
-                  minutes: 0,
-                ),
-            // tempoFatturato: parseDuration(occupation['attributes']['time02']) ??
-            //     const Duration(
-            //       hours: 0,
-            //       minutes: 0,
-            //     ),
+                minutes: (occupation['attributes']['duration'] * 60).toInt()),
             commessa: material,
             task: task,
           ),
         );
-
-        // Ordino la lista in base al codice del WO
-        //loadedWorkTimes.sort((a, b) => a.data.compareTo(b.data));
-
-        //   },
-        // );
       }
     } catch (error) {
-      print(error.toString());
+      logger.d(error.toString());
       throw error;
     } finally {
       // Aggiorno la lista di WO
@@ -538,7 +511,7 @@ class WorkTimes with ChangeNotifier {
   }
 
   Future<void> addWorkTime(WorkTime workTime, {int index = 0}) async {
-    print('Funzione addWorkTime');
+    logger.d('Funzione addWorkTime');
 
     // Preparo l'header
     Map<String, String> headers = {
@@ -548,7 +521,7 @@ class WorkTimes with ChangeNotifier {
 
     final url = Uri.parse('$urlAmbiente/api/entities/v1/occupation');
 
-    final data = json.encode(workTime.task.id != null
+    final data = json.encode(workTime.task!.id != null
         ? {
             'data': {
               'type': 'occupation',
@@ -563,7 +536,7 @@ class WorkTimes with ChangeNotifier {
                 "WO": {
                   "data": {
                     "type": "wo",
-                    "id": workTime.task.id,
+                    "id": workTime.task!.id,
                   }
                 },
                 "technician": {
@@ -614,7 +587,7 @@ class WorkTimes with ChangeNotifier {
             }
           });
 
-    //print(url);
+    //logger.d(url);
     try {
       final response = await http.post(
         url,
@@ -622,7 +595,8 @@ class WorkTimes with ChangeNotifier {
         headers: headers,
       );
 
-      print('Stato occupation: ${json.decode(response.statusCode.toString())}');
+      logger.d(
+          'Stato occupation: ${json.decode(response.statusCode.toString())}');
 
       if (response.statusCode >= 400) {
         if (json.decode(response.body)['errors'][0]['code'] ==
@@ -636,7 +610,6 @@ class WorkTimes with ChangeNotifier {
           );
         }
         //com.carl.xnet.works.backend.exceptions.WOOccupationDateExceptions
-
       }
 
       workTime.id = json.decode(response.body)['data']['id'];
@@ -644,7 +617,7 @@ class WorkTimes with ChangeNotifier {
       _workTimes.insert(index, workTime);
       notifyListeners();
     } catch (error) {
-      print(error);
+      logger.d(error);
       throw error;
     }
   }
@@ -664,7 +637,7 @@ class WorkTimes with ChangeNotifier {
     final url = Uri.parse('$urlAmbiente/api/entities/v1/occupation/$id');
 
     final data = json.encode(
-      newWorkTime.task.id != null
+      newWorkTime.task!.id != null
           ? {
               'data': {
                 'type': 'occupation',
@@ -679,7 +652,7 @@ class WorkTimes with ChangeNotifier {
                   "WO": {
                     "data": {
                       "type": "wo",
-                      "id": newWorkTime.task.id,
+                      "id": newWorkTime.task!.id,
                     }
                   },
                   "technician": {
@@ -739,7 +712,7 @@ class WorkTimes with ChangeNotifier {
           headers: headers,
         );
 
-        print(
+        logger.d(
           'Stato occupation: ${json.decode(response.statusCode.toString())}',
         );
 
@@ -753,7 +726,7 @@ class WorkTimes with ChangeNotifier {
 
         notifyListeners();
       } catch (error) {
-        print(error);
+        logger.d(error);
         throw error;
       }
     }
@@ -768,13 +741,13 @@ class WorkTimes with ChangeNotifier {
 
     final url =
         Uri.parse('$urlAmbiente/api/entities/v1/occupation/$workTimeID');
-    //print(urlDeleteWoEqpt);
+    //logger.d(urlDeleteWoEqpt);
 
     final response = await http.delete(
       url,
       headers: headers,
     );
-    print('Stato delete WorkTime: ${response.statusCode}');
+    logger.d('Stato delete WorkTime: ${response.statusCode}');
 
     if (response.statusCode >= 400) {
       throw HttpException(

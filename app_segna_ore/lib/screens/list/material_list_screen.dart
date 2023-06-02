@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/materials.dart';
-import '../../widgets/material_list.dart';
+import '../../widgets/lists/material_list.dart';
 import '../../widgets/loading_indicator.dart';
 import '../../widgets/badge.dart';
 
@@ -17,7 +17,7 @@ class MaterialListScreen extends StatelessWidget {
     }
 
     var arguments =
-        ModalRoute.of(context).settings.arguments as Map<String, dynamic>;
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
     var function = arguments['function'];
     var cliente = arguments['cliente'];
 
@@ -56,7 +56,6 @@ class MaterialListScreen extends StatelessWidget {
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    filtroController.dispose();
                   },
                   child: const Text('Annulla'),
                 ),
@@ -65,7 +64,6 @@ class MaterialListScreen extends StatelessWidget {
                     cliente = filtroController.text;
                     Navigator.pop(context);
                     _refreshMaterials(context, cliente);
-                    filtroController.dispose();
                   },
                   child: const Text('Cerca'),
                 ),
@@ -85,20 +83,12 @@ class MaterialListScreen extends StatelessWidget {
           )
         ],
         title: Consumer<Materials>(
-            builder: (_, material, ch) => Badge(
-                  child: ch,
+            builder: (_, material, ch) => BadgeWidget(
                   value: material.itemCount.toString(),
+                  child: ch!,
                 ),
             child: const Text('Commesse attive')),
         backgroundColor: Theme.of(context).colorScheme.primary,
-        // actions: [
-        //   IconButton(
-        //     icon: const Icon(Icons.add),
-        //     onPressed: () {
-        //       Navigator.of(context).pushNamed(BoxDetailScreen.routeName);
-        //     },
-        //   ),
-        // ],
       ),
       body: RefreshIndicator(
         onRefresh: () => _refreshMaterials(context, cliente),

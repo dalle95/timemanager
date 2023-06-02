@@ -1,22 +1,22 @@
-import 'package:app_segna_ore/models/http_wooccupationdateexception.dart';
-import 'package:app_segna_ore/providers/tasks.dart';
-import 'package:app_segna_ore/screens/detail/box_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/flutter_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/http_exception.dart';
-import '../../providers/actiontype.dart';
-import '../../providers/task.dart';
-import '../../providers/material.dart' as carl;
-import '../../providers/worktime.dart';
+import '../../errors/http_exception.dart';
+import '../../errors/http_wooccupationdateexception.dart';
+
+import '../../models/actiontype.dart';
+import '../../models/task.dart';
+import '../../models/material.dart' as carl;
+import '../../models/worktime.dart';
+
 import '../../providers/worktimes.dart';
+import '../../providers/tasks.dart';
 
 import '../../screens/list/material_list_screen.dart';
 import '../../screens/list/task_list_screen.dart';
-
-import '../../widgets/flat_button.dart';
 
 enum Tipologia { insert, update }
 
@@ -31,13 +31,20 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
   final _form = GlobalKey<FormState>();
 
   var _isInit = true;
+  // ignore: unused_field
   var _isLoading = false;
   var _tipologia;
+
+  // Per gestire i log
+  var logger = Logger();
 
   // Inizializzo gli elementi vuoti
   var _task = Task(
     id: null,
     code: '',
+    description: '',
+    statusCode: '',
+    actionType: ActionType(id: null, code: '', description: ''),
     commessa: carl.Material(
       id: null,
       code: '',
@@ -115,20 +122,20 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
   void didChangeDependencies() {
     if (_isInit) {
       final arguments =
-          ModalRoute.of(context).settings.arguments as Map<String, String>;
+          ModalRoute.of(context)!.settings.arguments as Map<dynamic, dynamic>?;
       if (arguments != null) {
         // Se l'argomento in ingresso è relativo ad un ticket precompilo i valori con quelli del ticket
         if (arguments.containsKey("wo_id")) {
           final woID = arguments['wo_id'];
           _editedWorkTime.task =
-              Provider.of<Tasks>(context, listen: false).findById(woID);
-          _task = _editedWorkTime.task;
-          _commessa = _editedWorkTime.task.commessa;
-          _initWorkTime.note = _editedWorkTime.task.description;
+              Provider.of<Tasks>(context, listen: false).findById(woID!);
+          _task = _editedWorkTime.task!;
+          _commessa = _editedWorkTime.task!.commessa!;
+          _initWorkTime.note = _editedWorkTime.task!.description;
         }
         // Se l'argomento in ingresso è relativo ad un giorno precompilo la data con quella del giorno
         if (arguments.containsKey("giornoCompetenza")) {
-          final giorno = DateTime.parse(arguments['giornoCompetenza']);
+          final giorno = DateTime.parse(arguments['giornoCompetenza']!);
           _initWorkTime.data = giorno;
         }
 
@@ -150,7 +157,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
               note: _editedWorkTime.note,
             );
 
-            _task = _editedWorkTime.task;
+            _task = _editedWorkTime.task!;
             _commessa = _editedWorkTime.commessa;
           }
         }
@@ -167,7 +174,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
       arguments: {
         'function': 'search',
       },
-    ) as Map<String, dynamic>;
+    ) as Map<dynamic, dynamic>?;
 
     if (result != null) {
       setState(() {
@@ -186,7 +193,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
           stima: result['stima'],
         );
 
-        _commessa = _task.commessa;
+        _commessa = _task.commessa!;
         _initWorkTime.note = _task.description;
       });
     }
@@ -199,7 +206,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
       arguments: {
         'function': 'search',
       },
-    ) as Map<String, dynamic>;
+    ) as Map<String, dynamic>?;
 
     if (result != null) {
       setState(() {
@@ -275,8 +282,8 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
   }
 
   // Date picker
-  void _mostraDatePicker() async {
-    DateTime pickedDate = await showDatePicker(
+  Future<void> _mostraDatePicker() async {
+    DateTime? pickedDate = await showDatePicker(
       context: context,
       locale: const Locale("it", "IT"),
       initialDate: DateTime.now(),
@@ -296,7 +303,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
               ),
             ),
           ),
-          child: child,
+          child: child!,
         );
       },
     );
@@ -318,12 +325,12 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
         title: const Text('Si è verificato un errore'),
         content: Text(message),
         actions: [
-          FlatButton(
-            () {
+          TextButton(
+            onPressed: () {
               Navigator.of(context).pop();
             },
-            const Text('Conferma'),
-          )
+            child: const Text('Conferma'),
+          ),
         ],
       ),
     );
@@ -339,13 +346,13 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
         title: const Text('Si è verificato un errore'),
         content: Text('$message\nAggiornare il ticket di conseguenza?'),
         actions: [
-          FlatButton(
-            () async {
+          TextButton(
+            onPressed: () async {
               try {
                 // Aggiorno il le date del ticket
                 await Provider.of<Tasks>(context, listen: false)
                     .updatePeriodTask(
-                  _editedWorkTime.task.id,
+                  _editedWorkTime.task!.id!,
                   _task,
                   _editedWorkTime.data,
                 );
@@ -365,14 +372,14 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
                     'Qualcosa è andato storto.. Anche ai migliori capita di sbagliare.');
               }
             },
-            const Text('Conferma'),
+            child: const Text('Conferma'),
           ),
-          FlatButton(
-            () {
+          TextButton(
+            onPressed: () {
               Navigator.of(context).pop();
             },
-            const Text('Annulla'),
-          )
+            child: const Text('Annulla'),
+          ),
         ],
       ),
     );
@@ -382,7 +389,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
   void _mostraSnackbarRisultato(Tipologia tipologia) {
     var scaffold = ScaffoldMessenger.of(context);
     var navigator = Navigator.of(context);
-    String message;
+    String? message;
 
     if (tipologia == Tipologia.update) {
       message = 'WorkTime aggiornato!';
@@ -394,7 +401,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
     scaffold.hideCurrentSnackBar();
     scaffold.showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message!),
         duration: const Duration(
           seconds: 2,
         ),
@@ -408,12 +415,12 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
 
   // Salvataggio e validazione del form
   Future<void> _saveForm() async {
-    var isValid = _form.currentState.validate();
+    var isValid = _form.currentState!.validate();
     if (!isValid) {
       return;
     }
 
-    _form.currentState.save();
+    _form.currentState!.save();
     setState(() {
       _isLoading = true;
     });
@@ -423,14 +430,14 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
     _editedWorkTime.commessa = _commessa;
     _editedWorkTime.tempoFatturato = _initWorkTime.tempoFatturato;
 
-    print(
+    logger.d(
         'WorkTime: id: ${_editedWorkTime.id ?? ''}, data: ${_editedWorkTime.data}, commessa: ${_editedWorkTime.commessa.code}, durata: ${_editedWorkTime.tempoFatturato.toString()}, note: ${_editedWorkTime.note}');
 
     if (_editedWorkTime.id != null) {
       try {
         //Per aggiornare un WorkTime già esistente
         await Provider.of<WorkTimes>(context, listen: false).updateWorkTime(
-          _editedWorkTime.id,
+          _editedWorkTime.id!,
           _initWorkTime,
           _editedWorkTime,
         );
@@ -497,13 +504,13 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _mostraDatePicker,
-                  Text(DateFormat('dd/MM/yyyy').format(_initWorkTime.data) ??
-                      ''),
-                ),
-              ),
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextButton(
+                    onPressed: _mostraDatePicker,
+                    child: Text(
+                      DateFormat('dd/MM/yyyy').format(_initWorkTime.data),
+                    ),
+                  )),
               const SizedBox(height: 10),
               const Text(
                 'Task',
@@ -514,9 +521,9 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _searchListTask,
-                  Text(_task.code),
+                child: TextButton(
+                  onPressed: _searchListTask,
+                  child: Text(_task.code),
                 ),
               ),
               const SizedBox(height: 10),
@@ -529,9 +536,9 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _searchListMaterial,
-                  Text(_commessa.description),
+                child: TextButton(
+                  onPressed: _searchListMaterial,
+                  child: Text(_commessa.description),
                 ),
               ),
               const SizedBox(height: 10),
@@ -544,9 +551,9 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _showTimePickerTempoFatturato,
-                  Text('${format(_initWorkTime.tempoFatturato)}'),
+                child: TextButton(
+                  onPressed: _showTimePickerTempoFatturato,
+                  child: Text('${format(_initWorkTime.tempoFatturato)}'),
                 ),
               ),
               TextFormField(
@@ -563,7 +570,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
                     commessa: _commessa,
                     data: _initWorkTime.data,
                     tempoFatturato: _initWorkTime.tempoFatturato,
-                    note: value,
+                    note: value!,
                   );
                 },
                 onEditingComplete: () {
@@ -573,7 +580,7 @@ class _WorkTimeDetailScreenState extends State<WorkTimeDetailScreen> {
                   _saveForm();
                 },
                 validator: (value) {
-                  if (value.isEmpty) {
+                  if (value!.isEmpty) {
                     return 'Inserisci delle note.';
                   }
                   return null;

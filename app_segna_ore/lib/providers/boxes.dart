@@ -2,8 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:logger/logger.dart';
 
-import '../providers/box.dart';
+import '../models/box.dart';
 
 class Boxes with ChangeNotifier {
   final String authToken;
@@ -12,6 +13,9 @@ class Boxes with ChangeNotifier {
   List<Box> _boxes = [];
 
   Boxes(this.urlAmbiente, this.authToken, this._boxes);
+
+  // Per gestire i log
+  var logger = Logger();
 
   List<Box> get boxes {
     return [..._boxes];
@@ -113,7 +117,7 @@ class Boxes with ChangeNotifier {
       // Recupero l'ID del Box appena creato
       box.id = json.decode(response.body)['data']['id'];
 
-      print('Stato box: ${json.decode(response.statusCode.toString())}');
+      logger.d('Stato box: ${json.decode(response.statusCode.toString())}');
 
       // Aggiungo il Box appena creato alla lista
       _boxes.insert(index, box);
@@ -160,7 +164,7 @@ class Boxes with ChangeNotifier {
           headers: headers,
         );
 
-        print('Stato box: ${response.statusCode}');
+        logger.d('Stato box: ${response.statusCode}');
 
         // Aggiorno il Box nella lista
         _boxes[boxIndex] = newBox;

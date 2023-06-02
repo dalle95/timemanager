@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/homepage.dart';
-import '../widgets/settings.dart';
-import '../widgets/statistics.dart';
+import 'homepage.dart';
+import 'settings.dart';
+import 'statistics.dart';
 
 class TabsScreen extends StatefulWidget {
   static const routeName = '/home';

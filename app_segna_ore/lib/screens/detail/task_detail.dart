@@ -1,23 +1,24 @@
-import 'package:app_segna_ore/providers/actor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_picker/flutter_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/http_exception.dart';
+import '../../errors/http_exception.dart';
 
-import '../../providers/actiontype.dart';
-import '../../providers/task.dart';
+import '../../models/actor.dart';
+import '../../models/material.dart' as carl;
+import '../../models/actiontype.dart';
+import '../../models/task.dart';
+import '../../models/box.dart';
+
 import '../../providers/tasks.dart';
-import '../../providers/box.dart';
-import '../../providers/material.dart' as carl;
 
 import '../../screens/list/material_list_screen.dart';
 import '../../screens/list/worktime_list_screen.dart';
 
 import '../list/box_list_screen.dart';
 import '../list/actiontype_list_screen.dart';
-import '../../widgets/flat_button.dart';
 
 enum tipologia { insert, update }
 
@@ -31,8 +32,12 @@ class TaskDetailScreen extends StatefulWidget {
 class _TaskDetailScreenState extends State<TaskDetailScreen> {
   final _form = GlobalKey<FormState>();
   var _isInit = true;
+  // ignore: unused_field
   var _isLoading = false;
   var _tipologia;
+
+  // Per gestire i log
+  var logger = Logger();
 
   // Inizializzo il valore iniziale della natura
   var _actionType = ActionType(
@@ -130,7 +135,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      final woId = ModalRoute.of(context).settings.arguments as String;
+      final woId = ModalRoute.of(context)!.settings.arguments as String?;
       if (woId != null) {
         _editedTask = Provider.of<Tasks>(context, listen: false).findById(woId);
 
@@ -154,9 +159,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           workflowTransitions: _editedTask.workflowTransitions,
         );
 
-        _actionType = _editedTask.actionType;
-        _cliente = _editedTask.cliente;
-        _commessa = _editedTask.commessa;
+        _actionType = _editedTask.actionType!;
+        _cliente = _editedTask.cliente!;
+        _commessa = _editedTask.commessa!;
       }
     }
     _isInit = false;
@@ -165,7 +170,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
   Future<void> _searchListActiontype() async {
     final result = await Navigator.of(context)
-        .pushNamed(ActionTypeListScreen.routeName) as Map<String, dynamic>;
+        .pushNamed(ActionTypeListScreen.routeName) as Map<String, dynamic>?;
 
     if (result != null) {
       setState(() {
@@ -184,7 +189,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       arguments: {
         'function': 'search',
       },
-    ) as Map<String, dynamic>;
+    ) as Map<String, dynamic>?;
 
     if (result != null) {
       setState(() {
@@ -206,7 +211,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         'function': 'search',
         'cliente': _cliente.code,
       },
-    ) as Map<String, dynamic>;
+    ) as Map<String, dynamic>?;
 
     if (result != null) {
       setState(() {
@@ -230,13 +235,13 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       adapter: NumberPickerAdapter(
         data: <NumberPickerColumn>[
           NumberPickerColumn(
-            initValue: _initTask.stima.inHours.toInt(),
+            initValue: _initTask.stima!.inHours.toInt(),
             begin: 0,
             end: 999,
             suffix: Text(' ore'),
           ),
           NumberPickerColumn(
-            initValue: _initTask.stima.inMinutes.toInt(),
+            initValue: _initTask.stima!.inMinutes.toInt(),
             begin: 0,
             end: 60,
             suffix: Text(' minuti'),
@@ -285,10 +290,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Future<void> _mostraDatePickerDataInizio() async {
-    DateTime pickedDate = await showDatePicker(
+    DateTime? pickedDate = await showDatePicker(
       context: context,
       locale: const Locale("it", "IT"),
-      initialDate: _initTask.dataInizio,
+      initialDate: _initTask.dataInizio!,
       firstDate: DateTime(1970),
       lastDate: DateTime(3000),
       builder: (context, child) {
@@ -305,7 +310,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
             ),
           ),
-          child: child,
+          child: child!,
         );
       },
     );
@@ -320,10 +325,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   }
 
   Future<void> _mostraDatePickerDataFine() async {
-    DateTime pickedDate = await showDatePicker(
+    DateTime? pickedDate = await showDatePicker(
       context: context,
       locale: const Locale("it", "IT"),
-      initialDate: _initTask.dataFine,
+      initialDate: _initTask.dataFine!,
       firstDate: DateTime(1970),
       lastDate: DateTime(3000),
       builder: (context, child) {
@@ -340,7 +345,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
             ),
           ),
-          child: child,
+          child: child!,
         );
       },
     );
@@ -356,7 +361,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
 
   Future<void> _confermaPassaggioStato(String statoNew, String statoOld) async {
     var navigator = Navigator.of(context);
-    String messaggio;
+    String? messaggio;
     if (statoNew == 'INPROGRESS') {
       messaggio =
           'Effettuare il passaggio di stato per mandare il ticket in corso?';
@@ -371,11 +376,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Passaggio di stato'),
-        content: Text(messaggio),
+        content: Text(messaggio!),
         actions: [
-          FlatButton(
-            () async {
-              //_saveForm();
+          TextButton(
+            onPressed: () async {
               await Provider.of<Tasks>(context, listen: false)
                   .passaggioStatoTask(_editedTask, statoNew, statoOld);
               navigator.pop();
@@ -385,14 +389,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 arguments: _editedTask.id,
               );
             },
-            const Text('Conferma'),
+            child: const Text('Conferma'),
           ),
-          FlatButton(
-            () {
+          TextButton(
+            onPressed: () {
               navigator.pop();
             },
-            const Text('Annulla'),
-          ),
+            child: const Text('Annulla'),
+          )
         ],
       ),
     );
@@ -517,11 +521,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         title: const Text('Si è verificato un errore'),
         content: Text(message),
         actions: [
-          FlatButton(
-            () {
+          TextButton(
+            onPressed: () {
               Navigator.of(context).pop();
             },
-            const Text('Conferma'),
+            child: const Text('Conferma'),
           )
         ],
       ),
@@ -535,18 +539,18 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     var scaffold = ScaffoldMessenger.of(context);
     var navigator = Navigator.of(context);
 
-    var isValid = _form.currentState.validate();
+    var isValid = _form.currentState!.validate();
     if (!isValid) {
       return;
     }
 
-    _form.currentState.save();
+    _form.currentState!.save();
     setState(() {
       _isLoading = true;
     });
 
-    print(
-      'WO: id: ${_initTask.id}, code: ${_initTask.code ?? ''}, description: ${_initTask.description ?? ''}, natura: ${_initTask.actionType.code ?? ''}, box: ${_initTask.cliente.code ?? ''}',
+    logger.d(
+      'WO: id: ${_initTask.id}, code: ${_initTask.code}, description: ${_initTask.description}, natura: ${_initTask.actionType!.code}, box: ${_initTask.cliente!.code}',
     );
 
     _editedTask.code = _initTask.code;
@@ -559,22 +563,22 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     _editedTask.dataFine = _initTask.dataFine;
     _editedTask.stima = _initTask.stima;
 
-    print(
-      'WO: id: ${_editedTask.id}, code: ${_editedTask.code ?? ''}, description: ${_editedTask.description ?? ''}, natura: ${_editedTask.actionType.code ?? ''}, box: ${_editedTask.cliente.code ?? ''}',
+    logger.d(
+      'WO: id: ${_editedTask.id}, code: ${_editedTask.code}, description: ${_editedTask.description}, natura: ${_editedTask.actionType!.code}, box: ${_editedTask.cliente!.code}',
     );
 
     if (_editedTask.id != null) {
       try {
         //Per aggiornare un WO già esistente
         await Provider.of<Tasks>(context, listen: false)
-            .updateTask(_editedTask.id, _initTask, _editedTask);
+            .updateTask(_editedTask.id!, _initTask, _editedTask);
         _tipologia = tipologia.update;
       } on HttpException catch (error) {
         // Errore con messaggio
         _showErrorDialog(error.toString());
       } catch (error) {
         // Errore generico
-        print(error);
+        logger.d(error);
         _showErrorDialog('Qualcosa è andato storto.');
       }
     } else {
@@ -588,7 +592,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
         _showErrorDialog(error.toString());
       } catch (error) {
         // Errore generico
-        print(error);
+        logger.d(error);
         _showErrorDialog('Qualcosa è andato storto.');
       }
     }
@@ -634,7 +638,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     Navigator.of(context).pushNamed(
                       WorkTimeListScreen.routeName,
                       arguments: {
-                        'function': 'list',
                         'filter': {'wo_id': _initTask.id}
                       },
                     );
@@ -663,13 +666,13 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 child: Center(
                   child: Text(
                     'Informazioni attività',
-                    style: Theme.of(context).textTheme.bodyText1,
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
               ),
               _initTask.id != null
                   ? TextFormField(
-                      initialValue: _initTask.code ?? '',
+                      initialValue: _initTask.code,
                       decoration: const InputDecoration(labelText: 'Codice'),
                       readOnly: true,
                       textInputAction: TextInputAction.next,
@@ -681,7 +684,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                       onSaved: (value) {
                         _editedTask = Task(
                           id: _editedTask.id,
-                          code: value,
+                          code: value!,
                           description: _editedTask.description,
                           statusCode: _editedTask.statusCode,
                           priority: _editedTask.priority,
@@ -692,7 +695,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                         );
                       },
                       validator: (value) {
-                        if (value.isEmpty) {
+                        if (value!.isEmpty) {
                           return 'Inserisci il codice.';
                         }
                         return null;
@@ -700,7 +703,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     )
                   : SizedBox(),
               TextFormField(
-                initialValue: _initTask.description ?? '',
+                initialValue: _initTask.description,
                 decoration: const InputDecoration(labelText: 'Titolo'),
                 minLines: 2,
                 maxLines: null,
@@ -715,7 +718,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   _editedTask = Task(
                     id: _editedTask.id,
                     code: _editedTask.code,
-                    description: value,
+                    description: value!,
                     statusCode: _editedTask.statusCode,
                     priority: _editedTask.priority,
                     cliente: _cliente,
@@ -725,14 +728,14 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   );
                 },
                 validator: (value) {
-                  if (value.isEmpty) {
+                  if (value!.isEmpty) {
                     return 'Inserisci un titolo.';
                   }
                   return null;
                 },
               ),
               TextFormField(
-                initialValue: _initTask.statusCode ?? '',
+                initialValue: _initTask.statusCode,
                 decoration: const InputDecoration(
                   labelText: 'Stato',
                 ),
@@ -744,7 +747,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     id: _editedTask.id,
                     code: _editedTask.code,
                     description: _editedTask.description,
-                    statusCode: value,
+                    statusCode: value!,
                     priority: _editedTask.priority,
                     cliente: _cliente,
                     commessa: _commessa,
@@ -759,52 +762,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   _saveForm();
                 },
                 validator: (value) {
-                  if (value.isEmpty) {
+                  if (value!.isEmpty) {
                     return 'Inserisci lo stato.';
                   }
                   return null;
                 },
               ),
-              // TextFormField(
-              //   initialValue: _initTask.priority ?? '',
-              //   decoration: const InputDecoration(
-              //     labelText: 'Priorità',
-              //   ),
-              //   textAlign: TextAlign.center,
-              //   readOnly: _initTask.id == null ? false : true,
-              //   textInputAction: TextInputAction.next,
-              //   onChanged: (value) {
-              //     setState(() {
-              //       _initTask.priority = value;
-              //     });
-              //   },
-              //   onSaved: (value) {
-              //     _editedTask = Task(
-              //       id: _editedTask.id,
-              //       code: _editedTask.code,
-              //       description: _editedTask.description,
-              //       statusCode: _editedTask.statusCode,
-              //       priority: value,
-              //       actionType: _editedTask.actionType,
-              //       cliente: _cliente,
-              //       commessa: _commessa,
-              //       stima: _editedTask.stima,
-              //       note: _editedTask.note,
-              //     );
-              //   },
-              //   onEditingComplete: () {
-              //     setState(() {});
-              //   },
-              //   onFieldSubmitted: (_) {
-              //     _saveForm();
-              //   },
-              //   validator: (value) {
-              //     if (value.isEmpty) {
-              //       return 'Inserisci la priorità.';
-              //     }
-              //     return null;
-              //   },
-              // ),
               const SizedBox(height: 10),
               const Text(
                 'Priorità',
@@ -815,9 +778,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _scegliPriorita,
-                  Text(_initTask.priority),
+                child: TextButton(
+                  onPressed: _scegliPriorita,
+                  child: Text(_initTask.priority!),
                 ),
               ),
               const SizedBox(height: 10),
@@ -830,9 +793,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _searchListActiontype,
-                  Text(_actionType.description),
+                child: TextButton(
+                  onPressed: _searchListActiontype,
+                  child: Text(_actionType.description!),
                 ),
               ),
               TextFormField(
@@ -877,7 +840,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 child: Center(
                   child: Text(
                     'Informazioni Gestionali',
-                    style: Theme.of(context).textTheme.bodyText1,
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
               ),
@@ -891,9 +854,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _searchListBox,
-                  Text(_cliente.description ?? ''),
+                child: TextButton(
+                  onPressed: _searchListBox,
+                  child: Text(_cliente.description),
                 ),
               ),
               const SizedBox(height: 10),
@@ -906,9 +869,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _searchListMaterial,
-                  Text(_commessa.description),
+                child: TextButton(
+                  onPressed: _searchListMaterial,
+                  child: Text(_commessa.description),
                 ),
               ),
               const SizedBox(height: 10),
@@ -921,7 +884,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 child: Center(
                   child: Text(
                     'Pianificazione',
-                    style: Theme.of(context).textTheme.bodyText1,
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
               ),
@@ -935,10 +898,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _mostraDatePickerDataInizio,
-                  Text(DateFormat('dd/MM/yyyy').format(_initTask.dataInizio) ??
-                      ''),
+                child: TextButton(
+                  onPressed: _mostraDatePickerDataInizio,
+                  child: Text(
+                    DateFormat('dd/MM/yyyy').format(_initTask.dataInizio!),
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -951,10 +915,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _mostraDatePickerDataFine,
-                  Text(DateFormat('dd/MM/yyyy').format(_initTask.dataFine) ??
-                      ''),
+                child: TextButton(
+                  onPressed: _mostraDatePickerDataFine,
+                  child: Text(
+                    DateFormat('dd/MM/yyyy').format(_initTask.dataFine!),
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
@@ -967,9 +932,9 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: FlatButton(
-                  _showTimePickerTempoStimato,
-                  Text('${format(_initTask.stima)}'),
+                child: TextButton(
+                  onPressed: _showTimePickerTempoStimato,
+                  child: Text('${format(_initTask.stima!)}'),
                 ),
               ),
             ],
