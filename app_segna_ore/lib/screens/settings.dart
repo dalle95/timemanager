@@ -2,10 +2,28 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../providers/auth.dart';
 
+// ignore: must_be_immutable
 class Settings extends StatelessWidget {
+  // Definizione variabile per estrarre informazioni app
+  PackageInfo _packageInfo = PackageInfo(
+    appName: 'Unknown',
+    packageName: 'Unknown',
+    version: 'Unknown',
+    buildNumber: 'Unknown',
+    buildSignature: 'Unknown',
+    installerStore: 'Unknown',
+  );
+
+  // Funzione per estrarre le informazioni app
+  Future<void> _initPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    _packageInfo = info;
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget buildListTile(IconData icon, String text, Function tapHandler) {
@@ -61,6 +79,9 @@ class Settings extends StatelessWidget {
 
     Future<void> _mostraMessaggioInfoApp() async {
       TextStyle linkStyle = TextStyle(color: Colors.blue);
+
+      await _initPackageInfo();
+
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -68,9 +89,10 @@ class Settings extends StatelessWidget {
           content: RichText(
             text: TextSpan(
               children: [
-                const TextSpan(
+                TextSpan(
                   style: TextStyle(color: Colors.black, fontSize: 20),
-                  text: "TimeManager versione: 2\n\n",
+                  text:
+                      "Versione ${_packageInfo.version} Build: ${_packageInfo.buildNumber}\n\n",
                 ),
                 const TextSpan(
                   style: TextStyle(color: Colors.black, fontSize: 15),
