@@ -2,12 +2,13 @@ import 'dart:math';
 
 import 'package:app_segna_ore/providers/worktimes.dart';
 import 'package:fl_chart/fl_chart.dart';
+
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
-class CaricoLavoroPerCommessa extends StatelessWidget {
-  const CaricoLavoroPerCommessa({
+class FatturazioneMensile extends StatelessWidget {
+  const FatturazioneMensile({
     Key? key,
     required this.mediaQuery,
   }) : super(key: key);
@@ -16,17 +17,14 @@ class CaricoLavoroPerCommessa extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<Map> caricoXCommessa =
-        Provider.of<WorkTimes>(context).calcolaCarichi();
+    final List<Map> datiFatturazione =
+        Provider.of<WorkTimes>(context).calcolaPercentualeFatturazione();
 
-    Logger().d(caricoXCommessa);
+    Logger().d(datiFatturazione);
 
     return Container(
       alignment: Alignment.center,
-      height: max(
-        Provider.of<WorkTimes>(context).calcolaCarichi().length * 35.0 + 250.0,
-        120,
-      ),
+      height: 300,
       width: mediaQuery.size.width * 0.4,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.background,
@@ -46,22 +44,23 @@ class CaricoLavoroPerCommessa extends StatelessWidget {
         child: Column(
           children: [
             const Text(
-              'Carico di lavoro per Commessa:',
+              'Percentuale Fatturazione:',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            if (caricoXCommessa.length != 0)
+            if (datiFatturazione.length != 0)
               Expanded(
-                child: GraficoATorta(caricoXCommessa: caricoXCommessa),
+                child: GraficoFatturazioneMensile(
+                    datiFatturazione: datiFatturazione),
               ),
-            if (caricoXCommessa.length == 0)
+            if (datiFatturazione.length == 0)
               Expanded(
                 child: Center(
                   child: Text('Non ci sono fasce caricate'),
                 ),
-              )
+              ),
           ],
         ),
       ),
@@ -69,19 +68,19 @@ class CaricoLavoroPerCommessa extends StatelessWidget {
   }
 }
 
-class GraficoATorta extends StatefulWidget {
-  GraficoATorta({
+class GraficoFatturazioneMensile extends StatefulWidget {
+  GraficoFatturazioneMensile({
     Key? key,
-    required this.caricoXCommessa,
+    required this.datiFatturazione,
   }) : super(key: key);
 
-  final List<Map> caricoXCommessa;
+  final List<Map> datiFatturazione;
 
   @override
-  State<StatefulWidget> createState() => _PieChart2State();
+  State<StatefulWidget> createState() => _GraficoFatturazioneMensile();
 }
 
-class _PieChart2State extends State<GraficoATorta> {
+class _GraficoFatturazioneMensile extends State<GraficoFatturazioneMensile> {
   int touchedIndex = -1;
 
   @override
@@ -113,75 +112,26 @@ class _PieChart2State extends State<GraficoATorta> {
                 ),
                 sectionsSpace: 0,
                 centerSpaceRadius: 40,
-                sections: showingSections(widget.caricoXCommessa),
+                sections: showingSections(widget.datiFatturazione),
               ),
             ),
-          ),
-        ),
-        Expanded(
-          child: Column(
-            children: leggenda(widget.caricoXCommessa),
           ),
         ),
       ],
     );
   }
 
-  List<Widget> leggenda(List<Map> caricoXCommessa) {
-    // Genero la lista dei record come leggenda
-    List<Widget> lista = caricoXCommessa.asMap().entries.map(
-      (entry) {
-        int index = entry.key;
-        Map elemento = entry.value;
-
-        String commessa = elemento['commessa'];
-        String ore = elemento['oreRegistrate'].toString();
-        double percentuale = elemento['caricoPercentuale'];
-        Color colore = elemento['colore'];
-
-        return Container(
-          height: 30,
-          padding: EdgeInsets.symmetric(
-            vertical: 5,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  commessa,
-                  softWrap: true, // Abilita il wrapping del testo
-                  overflow: TextOverflow
-                      .clip, // Tronca il testo se va oltre il limite
-                ),
-              ),
-              SizedBox(
-                width: 10,
-              ),
-              Container(
-                height: 20,
-                width: 20,
-                color: colore,
-              ),
-            ],
-          ),
-        );
-      },
-    ).toList();
-
-    return lista;
-  }
-
   // Creazione lista dati per il grafico
-  List<PieChartSectionData> showingSections(List<Map> caricoXCommessa) {
+  List<PieChartSectionData> showingSections(List<Map> datiFatturazione) {
     // Genero la lista dei record da visualizzare nel grafico
-    List<PieChartSectionData> listaDati = caricoXCommessa.asMap().entries.map(
+    List<PieChartSectionData> listaDati = datiFatturazione.asMap().entries.map(
       (entry) {
         int index = entry.key;
         Map elemento = entry.value;
 
-        String commessa = elemento['commessa'];
-        String ore = elemento['oreRegistrate'].toString();
-        double percentuale = elemento['caricoPercentuale'];
+        String titolo = elemento['titolo'];
+        String ore = elemento['ore'].toString();
+        double percentuale = elemento['percentuale'];
         Color colore = elemento['colore'];
 
         final isTouched = index == touchedIndex;
@@ -191,9 +141,9 @@ class _PieChart2State extends State<GraficoATorta> {
 
         return PieChartSectionData(
           color: colore,
-          titlePositionPercentageOffset: 1.2,
+          //titlePositionPercentageOffset: 1.2,
           value: percentuale,
-          title: '$percentuale%',
+          title: '$percentuale%\n$ore Ore',
           radius: radius,
           titleStyle: TextStyle(
             fontSize: fontSize,

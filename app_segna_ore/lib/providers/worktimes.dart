@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -96,49 +97,109 @@ class WorkTimes with ChangeNotifier {
   }
 
   // Funzione per calcolare i carichi di lavoro per le commesse
-  List<Map> calcolaCarichi() {
-    // Dichiaro la lista che restituisco e il totale di ore
-    List<Map> caricoXCommessa = [];
+  List<Map<String, dynamic>> calcolaCarichi() {
+    Color coloreCasuale() {
+      Random random = Random();
+      return Color.fromARGB(
+        255,
+        random.nextInt(256),
+        random.nextInt(256),
+        random.nextInt(256),
+      );
+    }
+
+    // Lista che conterrà i carichi di lavoro per le commesse
+    List<Map<String, dynamic>> caricoXCommessa = [];
+
+    // Variabile per tenere traccia del totale delle ore
     double oreTot = 0;
 
-    // Creo un ciclo per iterare ogni worktime caricato catalogandolo per commessa
-    for (int index = 0; index < _workTimes.length; index++) {
-      oreTot = oreTot + _workTimes[index].tempoFatturato.inMinutes / 60;
-      if (caricoXCommessa
-          .where((worktime) =>
-              worktime['commessa'] == _workTimes[index].commessa.description)
-          .isEmpty) {
-        caricoXCommessa.add(
-          {
-            'commessa': _workTimes[index].commessa.description,
-            'oreRegistrate': _workTimes[index].tempoFatturato.inMinutes / 60,
-          },
-        );
-      } else {
-        int indice = caricoXCommessa.indexWhere((worktime) =>
-            worktime['commessa'] == _workTimes[index].commessa.description);
+    // Ciclo per iterare attraverso ogni worktime e catalogarli per commessa
+    for (var workTime in _workTimes) {
+      // Aggiungi le ore del worktime al totale delle ore
+      oreTot += workTime.tempoFatturato.inMinutes / 60;
 
-        caricoXCommessa[indice]['oreRegistrate'] = caricoXCommessa[indice]
-                ['oreRegistrate'] +
-            _workTimes[indice].tempoFatturato.inMinutes / 60;
+      // Controlla se la commessa esiste già nella lista dei carichi di lavoro
+      var existingCommessaIndex = caricoXCommessa.indexWhere(
+          (element) => element['commessa'] == workTime.commessa.description);
+
+      // Se la commessa non esiste, aggiungila alla lista dei carichi di lavoro
+      if (existingCommessaIndex == -1) {
+        caricoXCommessa.add({
+          'commessa': workTime.commessa.description,
+          'oreRegistrate': workTime.tempoFatturato.inMinutes / 60,
+        });
+      }
+      // Se la commessa esiste già, aggiorna le ore registrate per quella commessa
+      else {
+        caricoXCommessa[existingCommessaIndex]['oreRegistrate'] +=
+            workTime.tempoFatturato.inMinutes / 60;
       }
     }
 
-    // Calcolo la percentuale di carico per ogni commessa nella lista
-    for (int index = 0; index < caricoXCommessa.length; index++) {
-      caricoXCommessa[index] = {
-        'commessa': caricoXCommessa[index]['commessa'],
-        'oreRegistrate': caricoXCommessa[index]['oreRegistrate'],
-        'caricoPercentuale': (caricoXCommessa[index]['oreRegistrate'] / oreTot),
-      };
+    // Calcola la percentuale di carico per ogni commessa
+    for (var commessa in caricoXCommessa) {
+      commessa['caricoPercentuale'] = double.parse(
+          ((commessa['oreRegistrate'] / oreTot) * 100).toStringAsFixed(2));
+      commessa['colore'] = coloreCasuale();
     }
 
-    // Ordino la lista in base alle ore registrate (prima quella con minori ore)
+    // Ordina la lista in base alle ore registrate (dalla commessa con più ore a quella con meno)
     caricoXCommessa
-        .sort((a, b) => a['oreRegistrate'].compareTo(b['oreRegistrate']));
+        .sort((a, b) => b['oreRegistrate'].compareTo(a['oreRegistrate']));
 
-    // Restituisco la lista al contrario per avere quella con ore maggiori prima
-    return caricoXCommessa.reversed.toList();
+    // Restituisci la lista dei carichi di lavoro
+    return caricoXCommessa;
+  }
+
+  // Funzione per calcolare le ore fatturate
+  List<Map> calcolaPercentualeFatturazione() {
+    // Variabile per tenere traccia del totale delle ore e di quelle fatturate
+    double oreTot = 0;
+    double oreFatturate = 0;
+
+    List<Map> lista = [];
+
+    if (_workTimes.length == 0) {
+      return lista;
+    }
+
+    // Ciclo per iterare attraverso ogni worktime e catalogarli per commessa
+    for (var workTime in _workTimes) {
+      // Aggiungi le ore del worktime al totale delle ore
+      oreTot += workTime.tempoFatturato.inMinutes / 60;
+
+      // Se la commessa NON è di Injenia allora le conto come ore fatturate
+      if (!workTime.commessa.code.startsWith("INJ")) {
+        oreFatturate += workTime.tempoFatturato.inMinutes / 60;
+      }
+    }
+
+    double oreNonFatturate = oreTot - oreFatturate;
+
+    double percentualeFatturato =
+        double.parse(((oreFatturate / oreTot) * 100).toStringAsFixed(2));
+
+    double percentualeNonFatturato =
+        double.parse((100 - percentualeFatturato).toStringAsFixed(2));
+
+    lista = [
+      {
+        'ore': oreFatturate,
+        'percentuale': percentualeFatturato,
+        'titolo': 'Fatturato',
+        'colore': Colors.orange,
+      },
+      {
+        'ore': oreNonFatturate,
+        'percentuale': percentualeNonFatturato,
+        'titolo': 'Non Fatturato',
+        'colore': Colors.grey,
+      },
+    ];
+
+    // Restituisci il totale ore e la percentuale
+    return lista;
   }
 
   // Funzione per estrarre le nature tramite richiesta get

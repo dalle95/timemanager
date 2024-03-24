@@ -49,6 +49,9 @@ class WorkTimeDayListScreen extends StatelessWidget {
             onPressed: () {
               Navigator.of(context).pushNamed(
                 WorkTimeDetailScreen.routeName,
+                arguments: {
+                  'giornoCompetenza': DateFormat("yyyy-MM-dd").format(giorno)
+                },
               );
             },
           ),

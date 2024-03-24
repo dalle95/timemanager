@@ -1,3 +1,4 @@
+import 'package:app_segna_ore/widgets/fatturazione_mensile.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -176,6 +177,10 @@ class _StatisticsState extends State<Statistics> {
                                   height: mediaQuery.size.height * 0.02,
                                 ),
                                 CaricoLavoroPerCommessa(mediaQuery: mediaQuery),
+                                SizedBox(
+                                  height: mediaQuery.size.height * 0.02,
+                                ),
+                                FatturazioneMensile(mediaQuery: mediaQuery),
                               ],
                             ),
                           ),
