@@ -131,9 +131,13 @@ class _AppState extends State<App> {
                   TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold),
               displayMedium:
                   TextStyle(fontSize: 25, fontStyle: FontStyle.normal),
+              displaySmall:
+                  TextStyle(fontSize: 20, fontStyle: FontStyle.normal),
               bodyLarge: TextStyle(
-                  fontSize: 20.0, color: Colors.white, fontFamily: 'Hind'),
+                  fontSize: 20.0, color: Colors.black, fontFamily: 'Hind'),
               bodyMedium: TextStyle(fontSize: 14.0, fontFamily: 'Hind'),
+              bodySmall: TextStyle(
+                  fontSize: 12.0, color: Colors.black, fontFamily: 'Hind'),
             ),
           ),
           home: auth.isAuth

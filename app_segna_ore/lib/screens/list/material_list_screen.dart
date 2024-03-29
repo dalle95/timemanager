@@ -23,6 +23,56 @@ class MaterialListScreen extends StatelessWidget {
 
     //var mediaQuery = MediaQuery.of(context);
 
+    // void mostraModal() {
+    //   showModalBottomSheet(
+    //     context: context,
+    //     isScrollControlled: true,
+    //     builder: (_) {
+    //       var filtroController = TextEditingController();
+
+    //       return Padding(
+    //         padding: EdgeInsets.only(
+    //           left: 30,
+    //           right: 30,
+    //           top: 20,
+    //           bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+    //         ),
+    //         child: Wrap(
+    //           children: [
+    //             Align(
+    //               alignment: Alignment.center,
+    //               child: Text(
+    //                 'Codice',
+    //                 style: Theme.of(context).textTheme.bodyMedium,
+    //               ),
+    //             ),
+    //             TextFormField(
+    //               autofocus: true,
+    //               textAlign: TextAlign.center,
+    //               style: Theme.of(context)
+    //                   .textTheme
+    //                   .bodySmall!
+    //                   .copyWith(fontSize: 15),
+    //               onChanged: (stringa) {
+    //                 cliente = filtroController.text;
+
+    //                 _refreshMaterials(context, cliente);
+    //               },
+    //               onFieldSubmitted: (_) {
+    //                 cliente = filtroController.text;
+
+    //                 _refreshMaterials(context, cliente);
+
+    //                 Navigator.pop(context);
+    //               },
+    //             ),
+    //           ],
+    //         ),
+    //       );
+    //     },
+    //   );
+    // }
+
     void mostraDialogoFiltro() {
       showDialog(
         context: context,
@@ -40,6 +90,7 @@ class MaterialListScreen extends StatelessWidget {
                   shrinkWrap: true,
                   children: [
                     TextFormField(
+                      autofocus: true,
                       controller: filtroController,
                       decoration: const InputDecoration(hintText: 'Codice'),
                       onFieldSubmitted: (_) async {
@@ -52,13 +103,8 @@ class MaterialListScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              actionsAlignment: MainAxisAlignment.center,
               actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Annulla'),
-                ),
                 TextButton(
                   onPressed: () {
                     cliente = filtroController.text;
@@ -66,6 +112,12 @@ class MaterialListScreen extends StatelessWidget {
                     _refreshMaterials(context, cliente);
                   },
                   child: const Text('Cerca'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Annulla'),
                 ),
               ],
             ),
@@ -78,7 +130,7 @@ class MaterialListScreen extends StatelessWidget {
       appBar: AppBar(
         actions: [
           IconButton(
-            onPressed: mostraDialogoFiltro,
+            onPressed: mostraDialogoFiltro, //() => mostraModal(context),
             icon: const Icon(Icons.search),
           )
         ],

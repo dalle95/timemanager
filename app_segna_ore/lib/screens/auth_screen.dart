@@ -98,9 +98,11 @@ class _AuthCardState extends State<AuthCard> {
     }
     _formKey.currentState!.save();
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(
+      () {
+        _isLoading = true;
+      },
+    );
 
     try {
       // Log user in
@@ -112,10 +114,22 @@ class _AuthCardState extends State<AuthCard> {
     } on HttpException catch (error) {
       // Errore durante il log in
       _showErrorDialog(error.toString());
+      setState(
+        () {
+          _isLoading = false;
+        },
+      );
     } catch (error) {
       var errorMessage =
           'Non è possibile esesguire l\'autenticazione, prova più tardi.';
       _showErrorDialog(error.toString());
+
+      setState(
+        () {
+          _isLoading = false;
+        },
+      );
+
       throw errorMessage;
     }
   }
