@@ -135,17 +135,21 @@ class _GraficoFatturazioneMensile extends State<GraficoFatturazioneMensile> {
         Color colore = elemento['colore'];
 
         final isTouched = index == touchedIndex;
+        final otherIsTouched = isTouched == false ? touchedIndex != -1 : false;
+        final textColor = otherIsTouched ? Colors.grey : Colors.black;
+
         final fontSize = isTouched ? 25.0 : 16.0;
         final radius = isTouched ? 60.0 : 50.0;
         const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
 
         return PieChartSectionData(
           color: colore,
-          //titlePositionPercentageOffset: 1.2,
+          titlePositionPercentageOffset: isTouched ? 1.2 : 1,
           value: percentuale,
           title: '$percentuale%\n$ore Ore',
           radius: radius,
           titleStyle: TextStyle(
+            color: textColor,
             fontSize: fontSize,
             fontWeight: FontWeight.bold,
             shadows: shadows,

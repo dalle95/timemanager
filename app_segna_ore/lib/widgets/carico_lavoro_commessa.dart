@@ -142,6 +142,7 @@ class _PieChart2State extends State<GraficoATorta> {
         final isTouched = index == touchedIndex;
         final otherIsTouched = isTouched == false ? touchedIndex != -1 : false;
         final fontWeight = isTouched ? FontWeight.bold : FontWeight.normal;
+        final textColor = otherIsTouched ? Colors.grey : Colors.black;
 
         return Container(
           height: 30,
@@ -158,7 +159,7 @@ class _PieChart2State extends State<GraficoATorta> {
                       .clip, // Tronca il testo se va oltre il limite
                   style: TextStyle(
                     fontWeight: fontWeight,
-                    color: otherIsTouched ? Colors.grey : Colors.black,
+                    color: textColor,
                   ),
                 ),
               ),
@@ -193,6 +194,9 @@ class _PieChart2State extends State<GraficoATorta> {
         Color colore = elemento['colore'];
 
         final isTouched = index == touchedIndex;
+        final otherIsTouched = isTouched == false ? touchedIndex != -1 : false;
+        final textColor = otherIsTouched ? Colors.grey : Colors.black;
+
         final fontSize = isTouched ? 25.0 : 16.0;
         final radius = isTouched ? 60.0 : 50.0;
         const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
@@ -205,6 +209,7 @@ class _PieChart2State extends State<GraficoATorta> {
           title: '$percentuale%',
           radius: radius,
           titleStyle: TextStyle(
+            color: textColor,
             fontSize: fontSize,
             fontWeight: fontWeight,
             shadows: shadows,
