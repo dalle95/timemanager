@@ -139,6 +139,10 @@ class _PieChart2State extends State<GraficoATorta> {
         double percentuale = elemento['caricoPercentuale'];
         Color colore = elemento['colore'];
 
+        final isTouched = index == touchedIndex;
+        final otherIsTouched = isTouched == false ? touchedIndex != -1 : false;
+        final fontWeight = isTouched ? FontWeight.bold : FontWeight.normal;
+
         return Container(
           height: 30,
           padding: EdgeInsets.symmetric(
@@ -152,6 +156,10 @@ class _PieChart2State extends State<GraficoATorta> {
                   softWrap: true, // Abilita il wrapping del testo
                   overflow: TextOverflow
                       .clip, // Tronca il testo se va oltre il limite
+                  style: TextStyle(
+                    fontWeight: fontWeight,
+                    color: otherIsTouched ? Colors.grey : Colors.black,
+                  ),
                 ),
               ),
               SizedBox(
@@ -188,16 +196,17 @@ class _PieChart2State extends State<GraficoATorta> {
         final fontSize = isTouched ? 25.0 : 16.0;
         final radius = isTouched ? 60.0 : 50.0;
         const shadows = [Shadow(color: Colors.black, blurRadius: 2)];
+        final fontWeight = isTouched ? FontWeight.bold : FontWeight.normal;
 
         return PieChartSectionData(
           color: colore,
-          titlePositionPercentageOffset: 1.2,
+          titlePositionPercentageOffset: isTouched ? 1.2 : 1,
           value: percentuale,
           title: '$percentuale%',
           radius: radius,
           titleStyle: TextStyle(
             fontSize: fontSize,
-            fontWeight: FontWeight.bold,
+            fontWeight: fontWeight,
             shadows: shadows,
           ),
         );

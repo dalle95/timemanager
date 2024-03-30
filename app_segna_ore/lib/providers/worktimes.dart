@@ -160,14 +160,25 @@ class WorkTimes with ChangeNotifier {
 
     List<Map> lista = [];
 
+    // Lista delle commesse che non devono essere calcolate per la fatturazione percentuale
+    List<String> listaCommesseDaNonContare = [
+      'Malattia',
+      'Ferie - Permesso',
+      'Donazione sangue',
+      'Maternità',
+    ];
+
     if (_workTimes.length == 0) {
       return lista;
     }
 
     // Ciclo per iterare attraverso ogni worktime e catalogarli per commessa
     for (var workTime in _workTimes) {
-      // Aggiungi le ore del worktime al totale delle ore
-      oreTot += workTime.tempoFatturato.inMinutes / 60;
+      // Controllo che la commessa sia da calcolare nella fatturazione
+      if (!listaCommesseDaNonContare.contains(workTime.commessa.description)) {
+        // Aggiungi le ore del worktime al totale delle ore
+        oreTot += workTime.tempoFatturato.inMinutes / 60;
+      }
 
       // Se la commessa NON è di Injenia allora le conto come ore fatturate
       if (!workTime.commessa.code.startsWith("INJ")) {
