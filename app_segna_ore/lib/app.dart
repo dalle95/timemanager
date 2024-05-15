@@ -1,3 +1,4 @@
+import 'package:app_segna_ore/urlAmbiente.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -35,7 +36,9 @@ class _AppState extends State<App> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (ctx) => Auth(),
+          create: (ctx) => Auth(
+            urlAmbiente: url.urlAmbiente,
+          ),
         ),
         ChangeNotifierProxyProvider<Auth, Tasks>(
           create: (context) => Tasks('', '', '', []),

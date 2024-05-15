@@ -24,7 +24,7 @@ class CaricoLavoroPerCommessa extends StatelessWidget {
     return Container(
       alignment: Alignment.center,
       height: max(
-        Provider.of<WorkTimes>(context).calcolaCarichi().length * 35.0 + 250.0,
+        Provider.of<WorkTimes>(context).calcolaCarichi().length * 40.0 + 250.0,
         120,
       ),
       width: mediaQuery.size.width * 0.4,

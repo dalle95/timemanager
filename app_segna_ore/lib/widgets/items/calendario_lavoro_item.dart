@@ -18,6 +18,39 @@ class _CalendarioDiLavoroItemState extends State<CalendarioDiLavoroItem> {
   Widget build(BuildContext context) {
     var mediaQuery = MediaQuery.of(context);
 
+    Widget corretto = SizedBox(
+      width: 45,
+      height: 70,
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: Image.asset('assets/icons/corretto.png'),
+      ),
+    );
+    Widget nonCorretto = SizedBox(
+      width: 40,
+      height: 70,
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: Image.asset('assets/icons/non_corretto.png'),
+      ),
+    );
+    Widget nonCompleto = SizedBox(
+      width: 150,
+      height: 150,
+      child: FittedBox(
+        fit: BoxFit.fill,
+        child: Image.asset('assets/icons/alert.png'),
+      ),
+    );
+    Widget nonPronto = SizedBox(
+      width: 150,
+      height: 70,
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: Image.asset('assets/icons/non_pronto.png'),
+      ),
+    );
+
     return InkWell(
       onTap: () {
         Navigator.of(context).pushNamed(
@@ -57,15 +90,16 @@ class _CalendarioDiLavoroItemState extends State<CalendarioDiLavoroItem> {
                         : Colors.grey,
                   ),
                   child: Center(
-                      child: Text(
-                    widget.giorno != ""
-                        ? DateTime.parse(widget.giorno).day.toString()
-                        : "",
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                    child: Text(
+                      widget.giorno != ""
+                          ? DateTime.parse(widget.giorno).day.toString()
+                          : "",
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  )),
+                  ),
                 ),
               ),
               Expanded(
@@ -73,24 +107,35 @@ class _CalendarioDiLavoroItemState extends State<CalendarioDiLavoroItem> {
                 child: SizedBox(
                   width: double.infinity,
                   child: Center(
-                    child: Text(
-                      widget.oreSegnate != ''
-                          ? double.parse(widget.oreSegnate)
-                              .toStringAsFixed(1)
-                              .replaceFirst(RegExp(r'\.?0*$'), '')
-                          : '',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: widget.oreSegnate != ''
-                            ? double.parse(widget.oreSegnate) == 0
-                                ? Colors.red[400]
-                                : double.parse(widget.oreSegnate) == 8.0
-                                    ? Colors.green[400]
-                                    : Colors.orange
-                            : Colors.white,
-                      ),
-                    ),
+                    child: widget.oreSegnate != ''
+                        ? double.parse(widget.oreSegnate) == 0
+                            ? DateTime.parse(widget.giorno)
+                                    .isBefore(DateTime.now())
+                                ? nonCorretto
+                                : nonPronto
+                            : double.parse(widget.oreSegnate) == 8.0
+                                ? corretto
+                                : nonCompleto
+                        : nonPronto,
+
+                    // Text(
+                    //   widget.oreSegnate != ''
+                    //       ? double.parse(widget.oreSegnate)
+                    //           .toStringAsFixed(1)
+                    //           .replaceFirst(RegExp(r'\.?0*$'), '')
+                    //       : '',
+                    //   style: TextStyle(
+                    //     fontSize: 17,
+                    //     fontWeight: FontWeight.bold,
+                    //     color: widget.oreSegnate != ''
+                    //         ? double.parse(widget.oreSegnate) == 0
+                    //             ? Colors.red[400]
+                    //             : double.parse(widget.oreSegnate) == 8.0
+                    //                 ? Colors.green[400]
+                    //                 : Colors.orange
+                    //         : Colors.white,
+                    //   ),
+                    // ),
                   ),
                 ),
               ),
